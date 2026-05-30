@@ -136,7 +136,7 @@ def summarize_with_claude(articles: list[dict], blog_candidates: list[dict], cfg
 
     today = datetime.now().strftime("%Y年%m月%d日")
 
-    prompt = f"""你是一位 AI 领域的资深研究员，为顶级机构的同行撰写每日深度简报。
+    prompt = f"""你是 AI Dispatch 的主编，为顶级机构的同行撰写每日深度简报。
 读者是熟悉该领域的专业人士，不需要解释基础概念，需要的是洞察和判断。
 用户重点关注的方向：{topics_str}。
 所有输出请使用{lang}。
@@ -170,7 +170,7 @@ def summarize_with_claude(articles: list[dict], blog_candidates: list[dict], cfg
 
 HTML 格式模板：
 
-<h2>🤖 AI 深度简报 · {today}</h2>
+<h2>📡 AI Dispatch · {today}</h2>
 <p class="intro">新闻 {len(articles)} 条 · 博客 {len(blogs)} 篇 · 聚焦 {topics_str}</p>
 
 <div class="section-title">📌 重点新闻</div>
@@ -273,7 +273,7 @@ h2 { color: #0f0f1a; margin-top: 0; font-size: 20px; }
 
 def send_email(html_body: str) -> None:
     today = datetime.now().strftime("%m/%d")
-    subject = f"🤖 AI Daily Brief · {today}"
+    subject = f"📡 AI Dispatch · {today}"
 
     full_html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -281,9 +281,9 @@ def send_email(html_body: str) -> None:
 </head>
 <body>
 <div class="wrapper">
-  <div class="header"><h1>AI Daily Brief</h1></div>
+  <div class="header"><h1>📡 AI Dispatch</h1></div>
   <div class="body">{html_body}</div>
-  <div class="footer">Powered by Claude + GitHub Actions · 每日 07:00 BST 自动发送</div>
+  <div class="footer">AI Dispatch · Powered by Claude + GitHub Actions · 每日 07:00 BST 自动发送</div>
 </div>
 </body></html>"""
 

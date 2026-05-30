@@ -109,7 +109,7 @@ if all_ok and gmail_user and gmail_pass and recipient:
         now = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
         html = f"""<!DOCTYPE html>
 <html><body style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px">
-<h2 style="color:#1a1a2e">✅ AI Daily Brief — 配置验证成功</h2>
+<h2 style="color:#1a1a2e">✅ AI Dispatch — 配置验证成功</h2>
 <p>你的环境已就绪，每日简报将按时自动发送到这个邮箱。</p>
 <table style="width:100%;border-collapse:collapse;font-size:14px">
   <tr><td style="padding:8px;color:#666">验证时间</td><td>{now}</td></tr>
@@ -125,12 +125,12 @@ if all_ok and gmail_user and gmail_pass and recipient:
       <td>{cfg['digest']['model']}</td></tr>
 </table>
 <p style="margin-top:24px;color:#888;font-size:12px">
-  AI Daily Brief · 每日 06:00 UTC 自动运行
+  AI Dispatch · 每日 06:00 UTC 自动运行
 </p>
 </body></html>"""
 
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = "✅ AI Daily Brief 配置验证成功"
+        msg["Subject"] = "✅ AI Dispatch 配置验证成功"
         msg["From"] = gmail_user
         msg["To"] = recipient
         msg.attach(MIMEText(html, "html", "utf-8"))

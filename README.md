@@ -1,6 +1,8 @@
-# 🤖 AI Daily Brief
+# 📡 AI Dispatch
 
 每天早上自动聚合 AI / Robotics / Agent 领域的最新动态，由 Claude Opus 生成深度分析，发送到你的邮箱。完全免费运行在 GitHub Actions 上，无需服务器。
+
+*Your daily AI intelligence dispatch.*
 
 ## 效果预览
 
