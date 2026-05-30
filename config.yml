@@ -1,9 +1,14 @@
-# ─────────────────────────────────────────────
-#  AI Daily Brief — 个人配置文件
-#  修改后推送到 GitHub 即可生效，无需改代码
-# ─────────────────────────────────────────────
+# ╔══════════════════════════════════════════════════════════════╗
+#  AI Daily Brief — 配置文件
+#  Fork 后只需修改这一个文件，推送到 GitHub 即可生效
+#  完整说明：README.md
+# ╚══════════════════════════════════════════════════════════════╝
 
-# 关注主题（会出现在 Claude 的 prompt 中，引导分析方向）
+
+# ──────────────────────────────────────────────
+#  STEP 1 · 告诉 Claude 你关注什么领域
+#  这些主题会直接影响 Claude 的分析角度和重点
+# ──────────────────────────────────────────────
 topics:
   - robotics
   - AI agents
@@ -11,31 +16,12 @@ topics:
   - multimodal models
   - embodied AI
 
-# arxiv 过滤关键词（标题或摘要包含任意一个则保留）
-arxiv_keywords:
-  - robot
-  - robotics
-  - humanoid
-  - manipulation
-  - embodied
-  - agent
-  - agentic
-  - multi-agent
-  - autonomous
-  - llm
-  - language model
-  - gpt
-  - gemini
-  - claude
-  - qwen
-  - deepseek
-  - multimodal
-  - vision
-  - foundation model
-  - reasoning
 
-# ── 新闻来源 ──────────────────────────────────
-# 注释掉某行即可禁用该来源
+# ──────────────────────────────────────────────
+#  STEP 2 · 选择新闻来源
+#  注释掉（行首加 #）即可禁用某个来源
+#  可以自行添加任何支持 RSS 的网站
+# ──────────────────────────────────────────────
 news_feeds:
   OpenAI Blog:        https://openai.com/blog/rss.xml
   Google DeepMind:    https://deepmind.google/discover/blog/rss.xml
@@ -47,8 +33,11 @@ news_feeds:
   arxiv cs.AI:        https://rss.arxiv.org/rss/cs.AI
   arxiv cs.RO:        https://rss.arxiv.org/rss/cs.RO
 
-# ── 博客来源 ──────────────────────────────────
-# 回溯窗口为 blog_days，已推送过的文章自动跳过
+
+# ──────────────────────────────────────────────
+#  STEP 3 · 选择博客订阅
+#  回溯 blog_days 天内的新文章，已推送过的自动跳过
+# ──────────────────────────────────────────────
 blog_feeds:
   Interconnects (Nathan Lambert):   https://www.interconnects.ai/feed
   Ahead of AI (Sebastian Raschka):  https://magazine.sebastianraschka.com/feed
@@ -59,9 +48,20 @@ blog_feeds:
   Lilian Weng:                      https://lilianweng.github.io/index.xml
   Last Week in AI:                  https://lastweekin.ai/feed
 
-# ── 经典文章 / 访谈 / 大佬经验分享 ───────────
-# 手动维护，不限时间，已推送过的自动跳过
-# type: blog / interview / talk / essay
+
+# ──────────────────────────────────────────────
+#  STEP 4 · 添加经典文章 / 访谈 / 大佬经验分享
+#  不限时间，已推送过的自动跳过，永不重复
+#  type 可填：blog / interview / talk / essay
+#
+#  格式：
+#  - title: 文章标题
+#    url:   https://...
+#    author: 作者名
+#    type:  blog
+#    year:  2023
+#    note:  一句话说明为什么值得读
+# ──────────────────────────────────────────────
 classics:
   - title: "Software 2.0"
     url: https://karpathy.medium.com/software-2-0-a64152b37c35
@@ -84,7 +84,7 @@ classics:
     year: 2024
     note: 前 OpenAI 研究员对 AGI 时间线和国家竞争的长篇深度分析
 
-  - title: "A Vision of Embodied AI — Demis Hassabis Interview"
+  - title: "Demis Hassabis — Lex Fridman Interview"
     url: https://www.youtube.com/watch?v=rbkT_xRDa8w
     author: Demis Hassabis / Lex Fridman
     type: interview
@@ -96,16 +96,41 @@ classics:
     author: Stephen Wolfram
     type: blog
     year: 2023
-    note: 从计算科学角度深度解析 LLM 工作原理，适合技术背景读者
+    note: 从计算科学角度深度解析 LLM 工作原理
 
-  # 在下方继续添加你自己的收藏 ↓
 
-# ── 运行参数 ──────────────────────────────────
+# ──────────────────────────────────────────────
+#  STEP 5（可选）· 高级参数，一般不需要改
+# ──────────────────────────────────────────────
+
+# arxiv 过滤关键词（标题或摘要命中任意一个才保留）
+arxiv_keywords:
+  - robot
+  - robotics
+  - humanoid
+  - manipulation
+  - embodied
+  - agent
+  - agentic
+  - multi-agent
+  - autonomous
+  - llm
+  - language model
+  - gpt
+  - gemini
+  - claude
+  - qwen
+  - deepseek
+  - multimodal
+  - vision
+  - foundation model
+  - reasoning
+
 digest:
   news_hours: 24          # 新闻回溯窗口（小时）
-  blog_days: 90           # 博客 RSS 回溯窗口（天），经典文章不受此限制
+  blog_days: 90           # 博客 RSS 回溯窗口（天）
   news_per_source: 50     # 每个新闻源最多抓取条数
-  blog_per_source: 20     # 每个博客最多抓取条数（窗口大，多抓一些）
-  model: claude-opus-4-7  # claude-opus-4-7 / claude-sonnet-4-6
+  blog_per_source: 20     # 每个博客最多抓取条数
+  model: claude-opus-4-7  # claude-opus-4-7 / claude-sonnet-4-6（更便宜但质量略低）
   max_tokens: 6000
-  output_language: 中文   # 摘要输出语言
+  output_language: 中文   # 摘要输出语言，可改为 English
