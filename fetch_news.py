@@ -171,7 +171,7 @@ def summarize_with_claude(articles: list[dict], blog_candidates: list[dict], cfg
 HTML 格式模板：
 
 <h2>📡 AI Dispatch · {today}</h2>
-<p class="intro">新闻 {len(articles)} 条 · 博客 {len(blogs)} 篇 · 聚焦 {topics_str}</p>
+<p class="intro">新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇 · 聚焦 {topics_str}</p>
 
 <div class="section-title">📌 重点新闻</div>
 
