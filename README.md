@@ -1,8 +1,8 @@
 # 📡 AI Dispatch
 
-**Your daily AI intelligence briefing, delivered by Claude.**
+**Your daily AI intelligence briefing, delivered to your inbox.**
 
-Automatically aggregates the latest in AI, Robotics, and Agents every morning — analyzed by Claude, delivered to your inbox. Runs entirely on GitHub Actions. No server. No subscription.
+Automatically aggregates the latest in AI, Robotics, and Agents every morning — analyzed by an LLM of your choice, delivered to your inbox. Runs entirely on GitHub Actions. No server. No subscription.
 
 ![Workflow](assets/workflow.svg)
 
@@ -30,7 +30,7 @@ Every email contains five structured sections:
 
 - GitHub account (free)
 - Gmail account
-- [Anthropic API Key](https://console.anthropic.com/) (pay-per-use, ~$0.05/day with Sonnet)
+- LLM API Key (default: Anthropic — pay-per-use, ~$0.05/day with Sonnet)
 
 ---
 
@@ -60,7 +60,7 @@ Add these **4 secrets**:
 
 | Secret | Value |
 |--------|-------|
-| `ANTHROPIC_API_KEY` | Your Anthropic API key (`sk-ant-...`) |
+| `ANTHROPIC_API_KEY` | Your LLM API key (default: Anthropic `sk-ant-...`) |
 | `GMAIL_USER` | Your Gmail address |
 | `GMAIL_APP_PASSWORD` | The 16-character app password (no spaces) |
 | `RECIPIENT_EMAIL` | Destination inbox (can be same as `GMAIL_USER`) |
@@ -74,7 +74,7 @@ Edit `config.yml` in the repo root — it's the only file you need to touch:
 ```
 config.yml has 5 sections:
 
-  STEP 1 · Topics          → tell Claude what you care about
+  STEP 1 · Topics          → tell the model what you care about
   STEP 2 · News feeds      → comment out sources you don't want, add your own RSS
   STEP 3 · Blog feeds      → researcher blogs, auto-rotated over 90 days
   STEP 4 · Classics        → timeless articles/interviews, auto-deduped forever
@@ -121,8 +121,8 @@ This validates all configuration and sends a test email to your inbox:
   ✅  news_feeds configured  (9 sources)
   ✅  blog_feeds configured  (8 blogs)
 
-── Anthropic API ────────────────────────────────────
-  ✅  API connection successful (claude-sonnet-4-6)
+── LLM API ──────────────────────────────────────────
+  ✅  API connection successful
 
 ── Gmail SMTP ───────────────────────────────────────
   ✅  Gmail login successful (you@gmail.com)
@@ -141,12 +141,16 @@ Once all green, AI Dispatch runs automatically every day at **06:00 UTC (07:00 B
 
 ## Cost
 
+The LLM call is the only cost. GitHub Actions is always free.
+
+**Default (Anthropic):**
+
 | Model | Per day | Per month | Notes |
 |-------|---------|-----------|-------|
 | `claude-sonnet-4-6` | ~$0.05 | ~$1.50 | Default, great quality |
 | `claude-opus-4-7` | ~$0.67 | ~$20 | Highest quality |
 
-Switch models in `config.yml` under `digest.model`. GitHub Actions is always free.
+You can swap in any compatible model by editing `digest.model` in `config.yml` and updating `fetch_news.py` to use your preferred SDK.
 
 ---
 
@@ -189,7 +193,7 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 # 📡 AI Dispatch（中文）
 
-**每天早上，由 Claude 生成的 AI 领域深度简报，自动发到你的邮箱。**
+**每天早上，AI 驱动的深度简报，自动聚合分析，发到你的邮箱。**
 
 全程运行在 GitHub Actions 上，不需要服务器，不需要订阅费，Fork 即用。
 
@@ -217,7 +221,7 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 - GitHub 账号（免费）
 - Gmail 账号
-- [Anthropic API Key](https://console.anthropic.com/)（按用量付费，Sonnet 约 ¥0.36/天）
+- LLM API Key（默认使用 Anthropic，按用量付费，Sonnet 约 ¥0.36/天）
 
 ---
 
@@ -247,7 +251,7 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 | Secret 名称 | 填写内容 |
 |-------------|----------|
-| `ANTHROPIC_API_KEY` | 你的 Anthropic API Key（`sk-ant-...`） |
+| `ANTHROPIC_API_KEY` | 你的 LLM API Key（默认 Anthropic：`sk-ant-...`） |
 | `GMAIL_USER` | 你的 Gmail 地址 |
 | `GMAIL_APP_PASSWORD` | 第二步生成的 16 位密码（去掉空格） |
 | `RECIPIENT_EMAIL` | 收件邮箱（可以和 `GMAIL_USER` 相同） |
@@ -261,7 +265,7 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 ```
 config.yml 分为 5 个部分，按需修改：
 
-  STEP 1 · 关注主题       → 告诉 Claude 你关心什么方向
+  STEP 1 · 关注主题       → 告诉模型你关心什么方向
   STEP 2 · 新闻来源       → 注释掉不需要的，添加自己的 RSS
   STEP 3 · 博客订阅       → 研究员博客，90 天内文章自动轮换
   STEP 4 · 经典收藏       → 经典文章/访谈，永久收藏，自动去重
@@ -308,8 +312,8 @@ classics:
   ✅  news_feeds 已配置  (9 个来源)
   ✅  blog_feeds 已配置  (8 个博客)
 
-── Anthropic API ────────────────────────────────────
-  ✅  API 连接成功 (claude-sonnet-4-6)
+── LLM API ──────────────────────────────────────────
+  ✅  API 连接成功
 
 ── Gmail SMTP ───────────────────────────────────────
   ✅  Gmail 登录成功 (you@gmail.com)
@@ -328,12 +332,16 @@ classics:
 
 ## 费用参考
 
+唯一的成本是 LLM API 调用。GitHub Actions 完全免费。
+
+**默认（Anthropic）：**
+
 | 模型 | 每天约 | 每月约 | 说明 |
 |------|--------|--------|------|
 | `claude-sonnet-4-6` | ¥0.36 | ¥11 | 默认，质量很好 |
 | `claude-opus-4-7` | ¥4.80 | ¥144 | 最高质量 |
 
-在 `config.yml` 的 `digest.model` 中切换。GitHub Actions 完全免费。
+修改 `config.yml` 的 `digest.model` 字段，并替换 `fetch_news.py` 中的 SDK，即可接入其他大模型。
 
 ---
 
