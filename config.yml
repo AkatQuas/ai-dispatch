@@ -48,7 +48,7 @@ news_feeds:
   arxiv cs.RO:        https://rss.arxiv.org/rss/cs.RO
 
 # ── 博客来源 ──────────────────────────────────
-# 更新频率低但质量高，窗口为 blog_hours
+# 回溯窗口为 blog_days，已推送过的文章自动跳过
 blog_feeds:
   Interconnects (Nathan Lambert):   https://www.interconnects.ai/feed
   Ahead of AI (Sebastian Raschka):  https://magazine.sebastianraschka.com/feed
@@ -59,12 +59,53 @@ blog_feeds:
   Lilian Weng:                      https://lilianweng.github.io/index.xml
   Last Week in AI:                  https://lastweekin.ai/feed
 
+# ── 经典文章 / 访谈 / 大佬经验分享 ───────────
+# 手动维护，不限时间，已推送过的自动跳过
+# type: blog / interview / talk / essay
+classics:
+  - title: "Software 2.0"
+    url: https://karpathy.medium.com/software-2-0-a64152b37c35
+    author: Andrej Karpathy
+    type: blog
+    year: 2017
+    note: AI 重新定义软件开发范式的奠基性文章
+
+  - title: "The Bitter Lesson"
+    url: http://www.incompleteideas.net/IncIdeas/BitterLesson.html
+    author: Rich Sutton
+    type: essay
+    year: 2019
+    note: 规模和计算力胜过人类先验知识，深度学习成功的根本原因
+
+  - title: "Situational Awareness: The Decade Ahead"
+    url: https://situational-awareness.ai
+    author: Leopold Aschenbrenner
+    type: essay
+    year: 2024
+    note: 前 OpenAI 研究员对 AGI 时间线和国家竞争的长篇深度分析
+
+  - title: "A Vision of Embodied AI — Demis Hassabis Interview"
+    url: https://www.youtube.com/watch?v=rbkT_xRDa8w
+    author: Demis Hassabis / Lex Fridman
+    type: interview
+    year: 2023
+    note: DeepMind CEO 谈机器人、AGI 路径和科学发现
+
+  - title: "What Is ChatGPT Doing … and Why Does It Work?"
+    url: https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/
+    author: Stephen Wolfram
+    type: blog
+    year: 2023
+    note: 从计算科学角度深度解析 LLM 工作原理，适合技术背景读者
+
+  # 在下方继续添加你自己的收藏 ↓
+
 # ── 运行参数 ──────────────────────────────────
 digest:
   news_hours: 24          # 新闻回溯窗口（小时）
-  blog_hours: 72          # 博客回溯窗口（小时）
+  blog_days: 90           # 博客 RSS 回溯窗口（天），经典文章不受此限制
   news_per_source: 50     # 每个新闻源最多抓取条数
-  blog_per_source: 5      # 每个博客最多抓取条数
+  blog_per_source: 20     # 每个博客最多抓取条数（窗口大，多抓一些）
   model: claude-opus-4-7  # claude-opus-4-7 / claude-sonnet-4-6
   max_tokens: 6000
   output_language: 中文   # 摘要输出语言

@@ -5,6 +5,9 @@ on:
     - cron: '0 6 * * *'   # 06:00 UTC = 07:00 BST (夏令时) / 06:00 GMT (冬季差1小时)
   workflow_dispatch:        # 允许手动触发测试
 
+permissions:
+  contents: write           # 允许 Action 把 sent_history.json commit 回仓库
+
 jobs:
   send-news:
     runs-on: ubuntu-latest
@@ -28,3 +31,11 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RECIPIENT_EMAIL:   ${{ secrets.RECIPIENT_EMAIL }}
         run: python fetch_news.py
+
+      - name: Commit updated sent history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sent_history.json
+          git diff --staged --quiet || git commit -m "chore: update sent history [skip ci]"
+          git push

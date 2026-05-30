@@ -1,7 +1,9 @@
 import feedparser
 import anthropic
 import smtplib
+import json
 import os
+import re
 import sys
 import yaml
 from email.mime.multipart import MIMEMultipart
@@ -9,11 +11,37 @@ from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+HISTORY_PATH = Path(__file__).parent / "sent_history.json"
+HISTORY_MAX = 1000  # 最多保留最近 1000 条，防止文件无限增长
+
 
 def load_config() -> dict:
     path = Path(__file__).parent / "config.yml"
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def load_history() -> set[str]:
+    if HISTORY_PATH.exists():
+        data = json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
+        return set(data.get("urls", []))
+    return set()
+
+
+def save_history(history: set[str], new_url: str) -> None:
+    updated = list(history | {new_url})
+    if len(updated) > HISTORY_MAX:
+        updated = updated[-HISTORY_MAX:]
+    HISTORY_PATH.write_text(
+        json.dumps({"urls": updated, "updated": datetime.now().isoformat()}, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+def extract_recommended_url(html: str) -> str | None:
+    """从 Claude 输出的 HTML 中提取 blog-pick 块里的链接。"""
+    match = re.search(r'<div class="blog-pick">.*?<a href="([^"]+)"', html, re.DOTALL)
+    return match.group(1) if match else None
 
 
 def _fetch_feeds(feeds: dict, hours: int, per_source: int,
@@ -62,14 +90,35 @@ def fetch_recent_articles(cfg: dict) -> list[dict]:
     )
 
 
-def fetch_recent_blogs(cfg: dict) -> list[dict]:
+def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
+    """抓取近 blog_days 天的博客文章 + 读取经典列表，过滤已推送过的。"""
     d = cfg["digest"]
-    return _fetch_feeds(
-        cfg["blog_feeds"], d["blog_hours"], d["blog_per_source"], cfg["arxiv_keywords"]
+    blog_hours = d["blog_days"] * 24
+
+    # RSS 博客
+    rss_blogs = _fetch_feeds(
+        cfg["blog_feeds"], blog_hours, d["blog_per_source"], cfg["arxiv_keywords"]
     )
 
+    # 经典文章（无时间限制，从 config 读取）
+    classics = [
+        {
+            "source": f"{c.get('type', 'classic').title()} · {c.get('author', '')}",
+            "title": c["title"],
+            "url": c["url"],
+            "summary": c.get("note", ""),
+            "published": str(c.get("year", "经典")),
+        }
+        for c in (cfg.get("classics") or [])
+    ]
 
-def summarize_with_claude(articles: list[dict], blogs: list[dict], cfg: dict) -> str:
+    # 合并后过滤历史
+    all_candidates = rss_blogs + classics
+    unsent = [a for a in all_candidates if a["url"] not in history]
+    return unsent
+
+
+def summarize_with_claude(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> str:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     d = cfg["digest"]
 
@@ -81,9 +130,9 @@ def summarize_with_claude(articles: list[dict], blogs: list[dict], cfg: dict) ->
         for a in articles
     )
     blogs_text = "\n\n---\n\n".join(
-        f"[博客·{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n内容: {b['summary']}"
-        for b in blogs
-    ) if blogs else "（今日无新博客更新）"
+        f"[{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n简介: {b['summary']}"
+        for b in blog_candidates
+    ) if blog_candidates else "（暂无候选，所有文章均已推送过）"
 
     today = datetime.now().strftime("%Y年%m月%d日")
 
@@ -96,7 +145,7 @@ def summarize_with_claude(articles: list[dict], blogs: list[dict], cfg: dict) ->
 
 {articles_text}
 
-【研究员博客】过去 {d['blog_hours']} 小时，共 {len(blogs)} 条：
+【博客/经典文章候选池】共 {len(blog_candidates)} 篇（含近期博客、经典文章、访谈、大佬经验分享，均未推送过）：
 
 {blogs_text}
 
@@ -112,8 +161,9 @@ def summarize_with_claude(articles: list[dict], blogs: list[dict], cfg: dict) ->
 2-3 篇值得精读的论文或报告（优先 arxiv），说明核心贡献和阅读重点。
 
 第四部分：今日推荐博客
-从博客列表中挑选 1 篇最值得精读的（若无合适则从新闻中选最具深度的长文）。
-给出：为什么值得花 15-30 分钟细读、3 个核心观点（bullet）、适合谁读。
+从候选池中挑选 1 篇最值得精读的（可以是近期博客、经典文章、访谈或经验分享，不限时间）。
+优先选择与今日新闻趋势有呼应的，或能提供长期视角的经典。
+给出：为什么今天推荐这篇（结合当下背景）、3 个核心观点（bullet）、适合谁读、大致阅读时间。
 
 第五部分：今日信号
 最关键的一个判断，不超过 60 字。
@@ -158,7 +208,7 @@ HTML 格式模板：
     <li>核心观点二</li>
     <li>核心观点三</li>
   </ul>
-  <p class="blog-audience">适合：……</p>
+  <p class="blog-audience">适合：…… · 阅读时间：约 XX 分钟</p>
 </div>
 
 <div class="closing">
@@ -250,22 +300,31 @@ def send_email(html_body: str) -> None:
 
 if __name__ == "__main__":
     cfg = load_config()
+    history = load_history()
 
     print("Fetching news articles...")
     articles = fetch_recent_articles(cfg)
     print(f"Found {len(articles)} news articles")
 
-    print("Fetching blog posts...")
-    blogs = fetch_recent_blogs(cfg)
-    print(f"Found {len(blogs)} blog posts")
+    print("Fetching blog/classic candidates...")
+    blog_candidates = fetch_blog_candidates(cfg, history)
+    print(f"Found {len(blog_candidates)} unsent blog/classic candidates")
 
-    if not articles and not blogs:
+    if not articles and not blog_candidates:
         print("No content found, skipping.")
         sys.exit(0)
 
     print("Summarizing with Claude...")
-    summary = summarize_with_claude(articles, blogs, cfg)
+    summary = summarize_with_claude(articles, blog_candidates, cfg)
 
     print("Sending email...")
     send_email(summary)
+
+    recommended_url = extract_recommended_url(summary)
+    if recommended_url:
+        print(f"Recording recommended URL: {recommended_url}")
+        save_history(history, recommended_url)
+    else:
+        print("[WARN] Could not extract recommended URL from output, history not updated.")
+
     print("Done!")
