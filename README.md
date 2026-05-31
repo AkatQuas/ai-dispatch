@@ -212,8 +212,8 @@ Check Actions → AI Dispatch for errors. GitHub Actions cron can occasionally d
 **Q: Gmail login fails (SMTPAuthenticationError)?**
 Make sure you're using the 16-character **app password**, not your Gmail account password.
 
-**Q: How do I switch to English output?**
-In `config.yml`, change `output_language: 中文` to `output_language: English`.
+**Q: How do I change the output language?**
+Edit `output_language` in `config.yml`. Default is `English` — change it to `中文` for Chinese output. The setup wizard also lets you choose during initial setup.
 
 **Q: How do I add my own RSS sources?**
 Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: https://rss-url`.
@@ -437,8 +437,8 @@ ai-dispatch/
 **Q: Gmail 登录失败 (SMTPAuthenticationError)？**
 确认用的是「应用专用密码」（16位）而不是 Gmail 账号密码本身。
 
-**Q: 想换成英文输出？**
-`config.yml` 中把 `output_language: 中文` 改为 `output_language: English` 即可。
+**Q: 如何切换输出语言？**
+修改 `config.yml` 中的 `output_language` 字段。默认为 `English`，改为 `中文` 即输出中文。配置向导中也可以在初始设置时选择。
 
 **Q: 如何添加自己的 RSS 源？**
 在 `config.yml` 的 `news_feeds` 或 `blog_feeds` 下新增一行：`名称: RSS链接`。
