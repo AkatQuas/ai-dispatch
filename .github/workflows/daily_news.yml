@@ -2,7 +2,7 @@ name: AI Dispatch
 
 on:
   schedule:
-    - cron: '0 3-9 * * *'  # 每小时触发一次（UTC 03-09），实际发送时间由 config.yml send_hour_utc 控制
+    - cron: '0 * * * *'    # 每小时触发一次，实际发送时间由 config.yml send_hour_utc 控制
   workflow_dispatch:        # 允许手动触发测试（忽略时间检查，直接发送）
 
 permissions:
