@@ -44,9 +44,11 @@ brew install gh
 ```
 
 ```powershell
-# Windows
+# Windows — open a new terminal after this completes
 winget install GitHub.cli
 ```
+
+> **Windows:** `winget` does not update the current terminal's PATH. After installation, **close and reopen your terminal** before running `gh`.
 
 ```bash
 # Linux (Debian / Ubuntu)
@@ -306,9 +308,11 @@ brew install gh
 ```
 
 ```powershell
-# Windows
+# Windows — 安装完成后需要重新打开终端
 winget install GitHub.cli
 ```
+
+> **Windows 注意：** `winget` 安装后不会自动更新当前终端的 PATH，**请关闭终端重新打开**，再运行 `gh`。
 
 ```bash
 # Linux（Debian / Ubuntu）
