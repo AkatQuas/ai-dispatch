@@ -1,0 +1,127 @@
+name: ⚙️ Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: 'LLM provider — gemini (free) or anthropic (paid)'
+        required: true
+        default: gemini
+        type: choice
+        options:
+          - gemini
+          - anthropic
+      gmail_user:
+        description: 'Your Gmail address  (e.g. you@gmail.com)'
+        required: true
+        type: string
+      recipient_email:
+        description: 'Recipient email  (leave blank to use Gmail address above)'
+        required: false
+        type: string
+      send_hour_utc:
+        description: 'Send time — UTC hour 0-23  (Beijing 08:00 → 0 | London BST 07:00 → 6 | New York 07:00 → 11)'
+        required: true
+        default: '6'
+        type: string
+      output_language:
+        description: 'Digest output language'
+        required: true
+        default: English
+        type: choice
+        options:
+          - English
+          - 中文
+
+jobs:
+  setup:
+    name: Apply configuration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update config.yml
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+
+          provider  = "${{ inputs.provider }}"
+          hour      = "${{ inputs.send_hour_utc }}".strip()
+          language  = "${{ inputs.output_language }}"
+          model     = "gemini-2.0-flash" if provider == "gemini" else "claude-sonnet-4-6"
+
+          try:
+              hour_int = int(hour)
+              assert 0 <= hour_int <= 23
+          except (ValueError, AssertionError):
+              print(f"ERROR: send_hour_utc must be 0-23, got '{hour}'")
+              sys.exit(1)
+
+          with open("config.yml", encoding="utf-8") as f:
+              content = f.read()
+
+          content = re.sub(r"^provider:\s*\S+",       f"provider: {provider}",  content, flags=re.MULTILINE)
+          content = re.sub(r"^send_hour_utc:\s*\d+",  f"send_hour_utc: {hour_int}", content, flags=re.MULTILINE)
+          content = re.sub(r"^(\s+model:\s*)\S+",     rf"\g<1>{model}",          content, flags=re.MULTILINE)
+          content = re.sub(r"^(\s+output_language:\s*)\S+", rf"\g<1>{language}", content, flags=re.MULTILINE)
+
+          with open("config.yml", "w", encoding="utf-8") as f:
+              f.write(content)
+
+          print(f"✓ provider={provider}  model={model}  send_hour_utc={hour_int}  language={language}")
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name  "AI Dispatch Setup"
+          git config user.email "setup@ai-dispatch.bot"
+          git add config.yml
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: apply setup wizard config"
+          git push
+
+      - name: Print secrets checklist
+        run: |
+          PROVIDER="${{ inputs.provider }}"
+          GMAIL="${{ inputs.gmail_user }}"
+          RECIPIENT="${{ inputs.recipient_email }}"
+          RECIPIENT="${RECIPIENT:-$GMAIL}"
+
+          if [ "$PROVIDER" = "gemini" ]; then
+            KEY_NAME="GEMINI_API_KEY"
+            KEY_HINT="Get a free key at https://aistudio.google.com/apikey"
+          else
+            KEY_NAME="ANTHROPIC_API_KEY"
+            KEY_HINT="Get a key at https://console.anthropic.com"
+          fi
+
+          SECRETS_URL="https://github.com/${{ github.repository }}/settings/secrets/actions/new"
+
+          echo ""
+          echo "════════════════════════════════════════════════════"
+          echo "  ✅  config.yml updated and pushed"
+          echo ""
+          echo "  Next: add these 4 secrets in your repo"
+          echo "  $SECRETS_URL"
+          echo ""
+          echo "  Secret name            Value"
+          echo "  ─────────────────────────────────────────────────"
+          echo "  $KEY_NAME"
+          echo "    → $KEY_HINT"
+          echo ""
+          echo "  GMAIL_USER"
+          echo "    → $GMAIL"
+          echo ""
+          echo "  GMAIL_APP_PASSWORD"
+          echo "    → your 16-char Gmail app password"
+          echo "    → myaccount.google.com/security → App Passwords"
+          echo ""
+          echo "  RECIPIENT_EMAIL"
+          echo "    → $RECIPIENT"
+          echo ""
+          echo "  After adding secrets, run:"
+          echo "  Actions → ✅ Check Setup → Run workflow"
+          echo "════════════════════════════════════════════════════"

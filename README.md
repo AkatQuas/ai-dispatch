@@ -26,17 +26,103 @@ Every email contains five structured sections:
 
 ## Quick Start
 
+No terminal required — everything runs in your browser.
+
 ### Prerequisites
 
 - GitHub account (free)
 - Gmail account
-- Python 3.10+
 
 ---
 
-### Step 0 — Install Git and GitHub CLI
+### Step 1 — Fork this repo
 
-**Git** (for cloning) and **gh** (for writing secrets automatically) are both required.
+Click **Fork** in the top right → create it under your own account.
+
+---
+
+### Step 2 — Run the Setup workflow
+
+Go to **Actions → ⚙️ Setup → Run workflow** and fill in the form:
+
+| Field | What to enter |
+|-------|--------------|
+| LLM provider | `gemini` (free) or `anthropic` (paid) |
+| Gmail address | your Gmail address |
+| Recipient email | leave blank to use the Gmail address above |
+| Send time (UTC) | hour 0–23 — Beijing 08:00 → `0`, London BST 07:00 → `6`, New York 07:00 → `11` |
+| Output language | `English` or `中文` |
+
+The workflow updates `config.yml` and prints a checklist of the secrets you need to add next.
+
+---
+
+### Step 3 — Add secrets
+
+Go to **Settings → Secrets and variables → Actions → New repository secret**
+
+Add these **4 secrets** (the Setup workflow tells you exactly what to put in each):
+
+| Secret | Value |
+|--------|-------|
+| `GEMINI_API_KEY` | Free key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — or `ANTHROPIC_API_KEY` if you chose Anthropic |
+| `GMAIL_USER` | Your Gmail address |
+| `GMAIL_APP_PASSWORD` | 16-character app password — [how to get one ↓](#gmail-app-password) |
+| `RECIPIENT_EMAIL` | Destination inbox |
+
+#### Gmail App Password
+
+> Gmail requires an app-specific password, not your account password.
+
+1. Go to [myaccount.google.com/security](https://myaccount.google.com/security)
+2. Confirm **2-Step Verification** is enabled
+3. Search **App Passwords** → open it
+4. Select Mail + Mac → click **Generate**
+5. Copy the **16-character password** (shown only once, no spaces)
+
+---
+
+### Step 4 — Verify
+
+Go to **Actions → ✅ Check Setup → Run workflow**
+
+```
+── GitHub Secrets ──────────────────────────────────
+  ✅  GEMINI_API_KEY     (set)
+  ✅  GMAIL_USER         (set)
+  ✅  GMAIL_APP_PASSWORD (set)
+  ✅  RECIPIENT_EMAIL    (set)
+
+── config.yml ──────────────────────────────────────
+  ✅  config.yml found
+  ✅  topics configured  (3 topics)
+  ✅  news_feeds configured  (9 sources)
+  ✅  blog_feeds configured  (8 blogs)
+
+── LLM API ──────────────────────────────────────────
+  ✅  API connection successful
+
+── Gmail SMTP ───────────────────────────────────────
+  ✅  Gmail login successful (you@gmail.com)
+
+── Test email ───────────────────────────────────────
+  ✅  Test email sent (check your inbox)
+
+══════════════════════════════════════════════════════
+  🎉  All checks passed! Your daily digest starts tomorrow.
+══════════════════════════════════════════════════════
+```
+
+Once all green, AI Dispatch runs automatically every day. The default send time targets **07:00 BST / 07:00 GMT** — change it via `send_hour_utc` in `config.yml`.
+
+---
+
+## Prefer the command line?
+
+<details>
+<summary>Set up locally with the interactive wizard (requires Git, Python 3.10+, and GitHub CLI).</summary>
+
+### Step 0 — Install Git and GitHub CLI
 
 #### Install Git
 
@@ -84,13 +170,7 @@ gh auth login
 
 Follow the prompts — select **GitHub.com → HTTPS → Login with a web browser**.
 
-> Already have Git and `gh` set up? Skip to Step 1.
-
----
-
 ### Step 1 — Fork, clone, and launch
-
-Run these commands:
 
 ```bash
 # macOS / Linux
@@ -106,120 +186,11 @@ cd ai-dispatch        # use the folder name printed by gh above
 python setup.py
 ```
 
-> `gh` prints the local path after cloning, e.g. `Cloned fork's Git repository to ai-dispatch`. Use that folder name in the `cd` command — it is almost always `ai-dispatch`.
+> `gh` prints the local path after cloning, e.g. `Cloned fork's Git repository to ai-dispatch`.
 
-This forks the repo to your account, clones it locally, and launches the setup wizard — all in one step.
-
-The wizard handles everything else:
-
-- Which LLM to use — **Gemini (free)** or Anthropic (paid)
-- Your Gmail address and app password
-- Preferred send time and output language
-- Writes all GitHub Secrets, updates `config.yml`, and pushes
-
-> Not sure if `gh` is installed? Run `gh --version`. If not found, complete Step 0 first.
-
----
+The wizard asks a few questions and handles everything else — secrets, config, and push.
 
 ### Step 2 — Verify
-
-Go to **Actions → ✅ Check Setup → Run workflow**
-
-```
-── GitHub Secrets ──────────────────────────────────
-  ✅  GEMINI_API_KEY     (set)
-  ✅  GMAIL_USER         (set)
-  ✅  GMAIL_APP_PASSWORD (set)
-  ✅  RECIPIENT_EMAIL    (set)
-
-── config.yml ──────────────────────────────────────
-  ✅  config.yml found
-  ✅  topics configured  (3 topics)
-  ✅  news_feeds configured  (9 sources)
-  ✅  blog_feeds configured  (8 blogs)
-
-── LLM API ──────────────────────────────────────────
-  ✅  API connection successful
-
-── Gmail SMTP ───────────────────────────────────────
-  ✅  Gmail login successful (you@gmail.com)
-
-── Test email ───────────────────────────────────────
-  ✅  Test email sent (check your inbox)
-
-══════════════════════════════════════════════════════
-  🎉  All checks passed! Your daily digest starts tomorrow.
-══════════════════════════════════════════════════════
-```
-
-Once all green, AI Dispatch runs automatically every day. The default send time targets **07:00 BST / 07:00 GMT** — change it via `send_hour_utc` in `config.yml`.
-
----
-
-## Manual Setup
-
-<details>
-<summary>No GitHub CLI? Set up manually in 4 steps.</summary>
-
-### Step 1 — Get a Gmail App Password
-
-> Gmail requires an app-specific password, not your account password.
-
-1. Go to [myaccount.google.com/security](https://myaccount.google.com/security)
-2. Confirm **2-Step Verification** is enabled
-3. Search for **App Passwords** → open it
-4. Select Mail + Mac → click **Generate**
-5. Copy the **16-character password** (shown only once)
-
-### Step 2 — Add GitHub Secrets
-
-Go to your forked repo → **Settings → Secrets and variables → Actions → New repository secret**
-
-Add these **4 secrets**:
-
-| Secret | Value |
-|--------|-------|
-| `GEMINI_API_KEY` | **Free** — get it at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (default) |
-| `GMAIL_USER` | Your Gmail address |
-| `GMAIL_APP_PASSWORD` | The 16-character app password (no spaces) |
-| `RECIPIENT_EMAIL` | Destination inbox (can be same as `GMAIL_USER`) |
-
-> Using Anthropic instead? Set `provider: anthropic` in `config.yml`, then add `ANTHROPIC_API_KEY` instead of `GEMINI_API_KEY`.
-
-### Step 3 — Personalize `config.yml`
-
-Edit `config.yml` in the repo root:
-
-```
-config.yml has 5 sections:
-
-  STEP 1 · Topics          → tell the model what you care about
-  STEP 2 · News feeds      → comment out sources you don't want, add your own RSS
-  STEP 3 · Blog feeds      → researcher blogs, auto-rotated over 90 days
-  STEP 4 · Classics        → timeless articles/interviews, auto-deduped forever
-  STEP 5 · Advanced        → model selection, language, token limits
-```
-
-**Example — change your topics:**
-```yaml
-topics:
-  - computer vision
-  - reinforcement learning
-  - AI safety
-```
-
-**Example — add a classic article:**
-```yaml
-classics:
-  - title: "Article Title"
-    url: https://example.com/article
-    author: Author Name
-    type: blog        # blog / interview / talk / essay
-    year: 2023
-    note: One line on why it's worth reading
-```
-
-### Step 4 — Verify
 
 Go to **Actions → ✅ Check Setup → Run workflow** and confirm all checks pass.
 
@@ -261,6 +232,7 @@ ai-dispatch/
 ├── sent_history.json       ← Auto-maintained dedup log (do not edit manually)
 └── .github/workflows/
     ├── daily_news.yml      ← Daily cron job
+    ├── setup.yml           ← First-time setup wizard (browser-based)
     └── check_setup.yml     ← One-click setup check
 ```
 
@@ -317,13 +289,99 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 - GitHub 账号（免费）
 - Gmail 账号
-- Python 3.10+
+
+全程在浏览器完成，无需安装任何软件。
 
 ---
 
-### 第零步：安装 Git 和 GitHub CLI
+### 第一步：Fork 仓库
 
-**Git**（用于 clone）和 **gh**（用于自动写入 Secrets）都需要提前安装。
+点击右上角 **Fork** → 创建到你自己的账号下。
+
+---
+
+### 第二步：运行 Setup workflow
+
+进入仓库 → **Actions → ⚙️ Setup → Run workflow**，填写表单：
+
+| 字段 | 填写内容 |
+|------|----------|
+| LLM provider | `gemini`（免费）或 `anthropic`（付费） |
+| Gmail 地址 | 你的 Gmail 地址 |
+| 收件邮箱 | 留空则默认与 Gmail 地址相同 |
+| 发送时间（UTC） | 小时 0–23 — 北京 08:00 → `0`，伦敦 BST 07:00 → `6`，纽约 07:00 → `11` |
+| 输出语言 | `English` 或 `中文` |
+
+workflow 运行完成后会自动更新 `config.yml`，并在日志中打印需要添加的 Secrets 清单。
+
+---
+
+### 第三步：添加 Secrets
+
+进入仓库 → **Settings → Secrets and variables → Actions → New repository secret**
+
+按 Setup workflow 日志中的提示，添加以下 **4 个** Secrets：
+
+| Secret 名称 | 填写内容 |
+|-------------|----------|
+| `GEMINI_API_KEY` | 在 [aistudio.google.com/apikey](https://aistudio.google.com/apikey) 免费申请；若选 Anthropic 则改为 `ANTHROPIC_API_KEY` |
+| `GMAIL_USER` | 你的 Gmail 地址 |
+| `GMAIL_APP_PASSWORD` | 16 位应用密码 — [获取方法 ↓](#gmail-应用密码) |
+| `RECIPIENT_EMAIL` | 收件邮箱 |
+
+#### Gmail 应用密码
+
+> Gmail 不允许直接用账号密码，需要生成专用的「应用密码」。
+
+1. 打开 [myaccount.google.com/security](https://myaccount.google.com/security)
+2. 确认**两步验证**已开启（未开启则先开启）
+3. 搜索框输入 **App Passwords** → 进入
+4. 选择「邮件」+「Mac」→ 点击**生成**
+5. 复制显示的 **16 位密码**（只显示一次，去掉空格填入）
+
+---
+
+### 第四步：验证配置
+
+进入仓库 → **Actions → ✅ Check Setup → Run workflow**
+
+```
+── GitHub Secrets ──────────────────────────────────
+  ✅  GEMINI_API_KEY     (已设置)
+  ✅  GMAIL_USER         (已设置)
+  ✅  GMAIL_APP_PASSWORD (已设置)
+  ✅  RECIPIENT_EMAIL    (已设置)
+
+── config.yml ──────────────────────────────────────
+  ✅  config.yml 存在
+  ✅  topics 已配置      (3 个主题)
+  ✅  news_feeds 已配置  (9 个来源)
+  ✅  blog_feeds 已配置  (8 个博客)
+
+── LLM API ──────────────────────────────────────────
+  ✅  API 连接成功
+
+── Gmail SMTP ───────────────────────────────────────
+  ✅  Gmail 登录成功 (you@gmail.com)
+
+── 测试邮件 ─────────────────────────────────────────
+  ✅  测试邮件已发送 (请检查收件箱)
+
+══════════════════════════════════════════════════════
+  🎉  所有检查通过！查收测试邮件后即可等待每日简报。
+══════════════════════════════════════════════════════
+```
+
+全部绿色后每天自动运行，默认目标到达时间为 **BST 07:00 / GMT 07:00**。
+
+---
+
+## 偏好命令行？
+
+<details>
+<summary>使用本地交互向导配置（需要 Git、Python 3.10+ 和 GitHub CLI）。</summary>
+
+### 第零步：安装 Git 和 GitHub CLI
 
 #### 安装 Git
 
@@ -369,15 +427,9 @@ sudo apt install gh
 gh auth login
 ```
 
-按提示选择 **GitHub.com → HTTPS → Login with a web browser**，完成授权即可。
+按提示选择 **GitHub.com → HTTPS → Login with a web browser**。
 
-> Git 和 `gh` 都已装好？跳过这步直接看第一步。
-
----
-
-### 第一步：一键 Fork、clone 并启动向导
-
-运行以下命令：
+### 第一步：Fork、clone 并启动向导
 
 ```bash
 # macOS / Linux
@@ -393,120 +445,9 @@ cd ai-dispatch        # 用 gh 输出的文件夹名，通常就是 ai-dispatch
 python setup.py
 ```
 
-> `gh` clone 完成后会打印本地路径，例如 `Cloned fork's Git repository to ai-dispatch`，`cd` 进那个文件夹即可。
-
-这三条命令会自动 Fork 仓库到你的账号、clone 到本地、启动配置向导。
-
-向导会处理剩下的一切：
-
-- 使用哪个大模型 — **Gemini（免费）** 或 Anthropic（付费）
-- Gmail 地址和应用密码
-- 发送时间和输出语言
-- 自动写入所有 GitHub Secrets、更新 `config.yml` 并推送
-
-> 不确定是否安装了 `gh`？运行 `gh --version` 检查。没有的话先完成第零步。
-
----
+向导会自动写入所有 Secrets、更新 `config.yml` 并推送。
 
 ### 第二步：验证配置
-
-进入仓库 → **Actions → ✅ Check Setup → Run workflow**
-
-```
-── GitHub Secrets ──────────────────────────────────
-  ✅  GEMINI_API_KEY     (已设置)
-  ✅  GMAIL_USER         (已设置)
-  ✅  GMAIL_APP_PASSWORD (已设置)
-  ✅  RECIPIENT_EMAIL    (已设置)
-
-── config.yml ──────────────────────────────────────
-  ✅  config.yml 存在
-  ✅  topics 已配置      (3 个主题)
-  ✅  news_feeds 已配置  (9 个来源)
-  ✅  blog_feeds 已配置  (8 个博客)
-
-── LLM API ──────────────────────────────────────────
-  ✅  API 连接成功
-
-── Gmail SMTP ───────────────────────────────────────
-  ✅  Gmail 登录成功 (you@gmail.com)
-
-── 测试邮件 ─────────────────────────────────────────
-  ✅  测试邮件已发送 (请检查收件箱)
-
-══════════════════════════════════════════════════════
-  🎉  所有检查通过！查收测试邮件后即可等待每日简报。
-══════════════════════════════════════════════════════
-```
-
-全部绿色后每天自动运行，默认目标到达时间为 **BST 07:00 / GMT 07:00**。如需调整，只需修改 `config.yml` 中的 `send_hour_utc`，无需改动 workflow 文件。
-
----
-
-## 手动配置
-
-<details>
-<summary>没有 GitHub CLI？按以下步骤手动配置。</summary>
-
-### 第一步：获取 Gmail 应用密码
-
-> Gmail 不允许直接用账号密码，需要生成专用的「应用密码」。
-
-1. 打开 [myaccount.google.com/security](https://myaccount.google.com/security)
-2. 确认**两步验证**已开启（未开启则先开启）
-3. 搜索框输入 **App Passwords** → 进入
-4. 选择「邮件」+「Mac」→ 点击**生成**
-5. 复制显示的 **16 位密码**（只显示一次）
-
-### 第二步：添加 GitHub Secrets
-
-进入你 Fork 后的仓库 → **Settings → Secrets and variables → Actions → New repository secret**
-
-需要添加以下 **4 个** Secrets：
-
-| Secret 名称 | 填写内容 |
-|-------------|----------|
-| `GEMINI_API_KEY` | **免费** — 在 [aistudio.google.com/apikey](https://aistudio.google.com/apikey) 申请（默认） |
-| `GMAIL_USER` | 你的 Gmail 地址 |
-| `GMAIL_APP_PASSWORD` | 第一步生成的 16 位密码（去掉空格） |
-| `RECIPIENT_EMAIL` | 收件邮箱（可以和 `GMAIL_USER` 相同） |
-
-> 使用 Anthropic？在 `config.yml` 中设置 `provider: anthropic`，并添加 `ANTHROPIC_API_KEY` 替换 `GEMINI_API_KEY`。
-
-### 第三步：个性化配置
-
-编辑仓库根目录的 **`config.yml`**：
-
-```
-config.yml 分为 5 个部分，按需修改：
-
-  STEP 1 · 关注主题       → 告诉模型你关心什么方向
-  STEP 2 · 新闻来源       → 注释掉不需要的，添加自己的 RSS
-  STEP 3 · 博客订阅       → 研究员博客，90 天内文章自动轮换
-  STEP 4 · 经典收藏       → 经典文章/访谈，永久收藏，自动去重
-  STEP 5 · 高级参数       → 模型选择、语言等（可不改）
-```
-
-**修改主题示例：**
-```yaml
-topics:
-  - computer vision
-  - reinforcement learning
-  - AI safety
-```
-
-**添加经典文章示例：**
-```yaml
-classics:
-  - title: "文章标题"
-    url: https://example.com/article
-    author: 作者名
-    type: blog        # blog / interview / talk / essay
-    year: 2023
-    note: 一句话说明为什么值得读
-```
-
-### 第四步：验证配置
 
 进入仓库 → **Actions → ✅ Check Setup → Run workflow**，确认所有检查通过。
 
