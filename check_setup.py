@@ -6,7 +6,6 @@ import os
 import smtplib
 import sys
 import yaml
-import anthropic
 from pathlib import Path
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -32,10 +31,16 @@ def section(title: str) -> None:
     print(f"\n── {title} {'─' * (50 - len(title))}")
 
 
+# ── 0. 读取 config.yml（后续检查需要 provider 信息）──
+config_path = Path(__file__).parent / "config.yml"
+_cfg_raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) if config_path.exists() else {}
+provider = _cfg_raw.get("provider", "anthropic")
+
 # ── 1. 环境变量 ──────────────────────────────────
 section("GitHub Secrets")
+llm_key_name = "GEMINI_API_KEY" if provider == "gemini" else "ANTHROPIC_API_KEY"
 required_secrets = {
-    "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
+    llm_key_name:        os.getenv(llm_key_name),
     "GMAIL_USER":        os.getenv("GMAIL_USER"),
     "GMAIL_APP_PASSWORD": os.getenv("GMAIL_APP_PASSWORD"),
     "RECIPIENT_EMAIL":   os.getenv("RECIPIENT_EMAIL"),
@@ -45,7 +50,6 @@ for name, value in required_secrets.items():
 
 # ── 2. config.yml ────────────────────────────────
 section("config.yml")
-config_path = Path(__file__).parent / "config.yml"
 cfg = None
 if check("config.yml 存在", config_path.exists()):
     try:
@@ -64,23 +68,28 @@ if check("config.yml 存在", config_path.exists()):
     except Exception as e:
         check("YAML 格式正确", False, str(e))
 
-# ── 3. Anthropic API ─────────────────────────────
-section("Anthropic API")
-api_key = os.getenv("ANTHROPIC_API_KEY")
+# ── 3. LLM API ───────────────────────────────────
+section(f"LLM API ({provider})")
+api_key = os.getenv(llm_key_name)
+model = cfg["digest"]["model"] if cfg else ("gemini-2.0-flash" if provider == "gemini" else "claude-sonnet-4-6")
 if api_key:
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        model = cfg["digest"]["model"] if cfg else "claude-sonnet-4-6"
-        msg = client.messages.create(
-            model=model,
-            max_tokens=10,
-            messages=[{"role": "user", "content": "hi"}],
-        )
+        if provider == "gemini":
+            from google import genai as google_genai
+            client = google_genai.Client(api_key=api_key)
+            client.models.generate_content(model=model, contents="hi")
+        else:
+            import anthropic as _anthropic
+            client = _anthropic.Anthropic(api_key=api_key)
+            client.messages.create(
+                model=model, max_tokens=10,
+                messages=[{"role": "user", "content": "hi"}],
+            )
         check(f"API 连接成功 ({model})", True)
     except Exception as e:
         check("API 连接", False, str(e))
 else:
-    check("API 连接（跳过，密钥未设置）", False)
+    check(f"API 连接（跳过，{llm_key_name} 未设置）", False)
 
 # ── 4. Gmail SMTP ────────────────────────────────
 section("Gmail SMTP")
@@ -125,7 +134,7 @@ if all_ok and gmail_user and gmail_pass and recipient:
       <td>{cfg['digest']['model']}</td></tr>
 </table>
 <p style="margin-top:24px;color:#888;font-size:12px">
-  AI Dispatch · 每日 06:00 UTC 自动运行
+  AI Dispatch · 由 config.yml send_hour_utc 控制发送时间
 </p>
 </body></html>"""
 

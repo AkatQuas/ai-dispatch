@@ -118,8 +118,8 @@ def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
     return unsent
 
 
-def summarize_with_claude(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> str:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+def summarize(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> str:
+    provider = cfg.get("provider", "anthropic")
     d = cfg["digest"]
 
     topics_str = "、".join(cfg["topics"])
@@ -215,12 +215,22 @@ HTML 格式模板：
   <strong>今日信号：</strong>……
 </div>"""
 
-    msg = client.messages.create(
-        model=d["model"],
-        max_tokens=d["max_tokens"],
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return msg.content[0].text
+    if provider == "gemini":
+        from google import genai as google_genai
+        client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        response = client.models.generate_content(
+            model=d["model"],
+            contents=prompt,
+        )
+        return response.text
+    else:
+        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        msg = client.messages.create(
+            model=d["model"],
+            max_tokens=d["max_tokens"],
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return msg.content[0].text
 
 
 EMAIL_CSS = """
@@ -314,8 +324,9 @@ if __name__ == "__main__":
         print("No content found, skipping.")
         sys.exit(0)
 
-    print("Summarizing with Claude...")
-    summary = summarize_with_claude(articles, blog_candidates, cfg)
+    provider = cfg.get("provider", "anthropic")
+    print(f"Summarizing with {provider}...")
+    summary = summarize(articles, blog_candidates, cfg)
 
     print("Sending email...")
     send_email(summary)

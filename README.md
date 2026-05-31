@@ -60,10 +60,12 @@ Add these **4 secrets**:
 
 | Secret | Value |
 |--------|-------|
-| `ANTHROPIC_API_KEY` | Your LLM API key (default: Anthropic `sk-ant-...`) |
+| `GEMINI_API_KEY` | **Free** — get it at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (default) |
 | `GMAIL_USER` | Your Gmail address |
 | `GMAIL_APP_PASSWORD` | The 16-character app password (no spaces) |
 | `RECIPIENT_EMAIL` | Destination inbox (can be same as `GMAIL_USER`) |
+
+> Using Anthropic instead? Set `provider: anthropic` in `config.yml`, then add `ANTHROPIC_API_KEY` instead of `GEMINI_API_KEY`.
 
 ---
 
@@ -221,7 +223,7 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 - GitHub 账号（免费）
 - Gmail 账号
-- LLM API Key（默认使用 Anthropic，按用量付费，Sonnet 约 ¥0.36/天）
+- LLM API Key（默认使用 **Gemini 免费版**，无需付费；也可切换为 Anthropic）
 
 ---
 
@@ -251,10 +253,12 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 | Secret 名称 | 填写内容 |
 |-------------|----------|
-| `ANTHROPIC_API_KEY` | 你的 LLM API Key（默认 Anthropic：`sk-ant-...`） |
+| `GEMINI_API_KEY` | **免费** — 在 [aistudio.google.com/apikey](https://aistudio.google.com/apikey) 申请（默认） |
 | `GMAIL_USER` | 你的 Gmail 地址 |
 | `GMAIL_APP_PASSWORD` | 第二步生成的 16 位密码（去掉空格） |
 | `RECIPIENT_EMAIL` | 收件邮箱（可以和 `GMAIL_USER` 相同） |
+
+> 使用 Anthropic？在 `config.yml` 中设置 `provider: anthropic`，并添加 `ANTHROPIC_API_KEY` 替换 `GEMINI_API_KEY`。
 
 ---
 
@@ -332,16 +336,23 @@ classics:
 
 ## 费用参考
 
-唯一的成本是 LLM API 调用。GitHub Actions 完全免费。
+GitHub Actions 完全免费。唯一的可能成本是 LLM API 调用（取决于你选择的 provider）。
 
-**默认（Anthropic）：**
+**Gemini（默认，免费）：**
+
+| 模型 | 费用 | 说明 |
+|------|------|------|
+| `gemini-2.0-flash` | 免费 | 默认，每天 1500 次请求限额，日报绰绰有余 |
+| `gemini-2.5-pro` | 免费额度内免费 | 质量更高，有每分钟请求限制 |
+
+**Anthropic（付费，可选）：**
 
 | 模型 | 每天约 | 每月约 | 说明 |
 |------|--------|--------|------|
-| `claude-sonnet-4-6` | ¥0.36 | ¥11 | 默认，质量很好 |
+| `claude-sonnet-4-6` | ¥0.36 | ¥11 | 质量很好 |
 | `claude-opus-4-7` | ¥4.80 | ¥144 | 最高质量 |
 
-修改 `config.yml` 的 `digest.model` 字段，并替换 `fetch_news.py` 中的 SDK，即可接入其他大模型。
+切换 provider 只需改 `config.yml` 中的 `provider` 和 `digest.model` 字段。
 
 ---
 
