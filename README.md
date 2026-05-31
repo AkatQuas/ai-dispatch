@@ -34,6 +34,37 @@ Every email contains five structured sections:
 
 ---
 
+### Step 0 — Install GitHub CLI
+
+The setup wizard uses `gh` to write your secrets automatically. Install it once, then you're set.
+
+```bash
+# macOS
+brew install gh
+```
+
+```powershell
+# Windows
+winget install GitHub.cli
+```
+
+```bash
+# Linux (Debian / Ubuntu)
+sudo apt install gh
+```
+
+Then log in:
+
+```bash
+gh auth login
+```
+
+Follow the prompts — select **GitHub.com → HTTPS → Login with a web browser**.
+
+> Already have `gh` installed? Skip to Step 1.
+
+---
+
 ### Step 1 — Fork, clone, and launch
 
 Run these commands:
@@ -61,7 +92,7 @@ The wizard handles everything else:
 - Preferred send time and output language
 - Writes all GitHub Secrets, updates `config.yml`, and pushes
 
-> **No GitHub CLI?** Install it at [cli.github.com](https://cli.github.com), run `gh auth login`, then paste the command above. Or see [Manual Setup](#manual-setup) below.
+> Not sure if `gh` is installed? Run `gh --version`. If not found, complete Step 0 first.
 
 ---
 
@@ -265,6 +296,37 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 ---
 
+### 第零步：安装 GitHub CLI
+
+配置向导通过 `gh` 自动写入 Secrets，需要提前安装一次。
+
+```bash
+# macOS
+brew install gh
+```
+
+```powershell
+# Windows
+winget install GitHub.cli
+```
+
+```bash
+# Linux（Debian / Ubuntu）
+sudo apt install gh
+```
+
+然后登录：
+
+```bash
+gh auth login
+```
+
+按提示选择 **GitHub.com → HTTPS → Login with a web browser**，完成授权即可。
+
+> 已经安装了 `gh`？跳过这步直接看第一步。
+
+---
+
 ### 第一步：一键 Fork、clone 并启动向导
 
 运行以下命令：
@@ -292,7 +354,7 @@ python setup.py
 - 发送时间和输出语言
 - 自动写入所有 GitHub Secrets、更新 `config.yml` 并推送
 
-> **没有 GitHub CLI？** 在 [cli.github.com](https://cli.github.com) 安装后运行 `gh auth login`，再粘贴上方命令。或见下方[手动配置](#手动配置)。
+> 不确定是否安装了 `gh`？运行 `gh --version` 检查。没有的话先完成第零步。
 
 ---
 
