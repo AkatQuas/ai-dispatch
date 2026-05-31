@@ -95,16 +95,18 @@ Run these commands:
 ```bash
 # macOS / Linux
 gh repo fork Yifannnnnnnnw/ai-dispatch --clone
-cd ai-dispatch
+cd ai-dispatch        # use the folder name printed by gh above
 python3 setup.py
 ```
 
 ```powershell
 # Windows
 gh repo fork Yifannnnnnnnw/ai-dispatch --clone
-cd ai-dispatch
+cd ai-dispatch        # use the folder name printed by gh above
 python setup.py
 ```
+
+> `gh` prints the local path after cloning, e.g. `Cloned fork's Git repository to ai-dispatch`. Use that folder name in the `cd` command — it is almost always `ai-dispatch`.
 
 This forks the repo to your account, clones it locally, and launches the setup wizard — all in one step.
 
@@ -380,18 +382,20 @@ gh auth login
 ```bash
 # macOS / Linux
 gh repo fork Yifannnnnnnnw/ai-dispatch --clone
-cd ai-dispatch
+cd ai-dispatch        # 用 gh 输出的文件夹名，通常就是 ai-dispatch
 python3 setup.py
 ```
 
 ```powershell
 # Windows
 gh repo fork Yifannnnnnnnw/ai-dispatch --clone
-cd ai-dispatch
+cd ai-dispatch        # 用 gh 输出的文件夹名，通常就是 ai-dispatch
 python setup.py
 ```
 
-这条命令会自动 Fork 仓库到你的账号、clone 到本地、启动配置向导，一步完成。
+> `gh` clone 完成后会打印本地路径，例如 `Cloned fork's Git repository to ai-dispatch`，`cd` 进那个文件夹即可。
+
+这三条命令会自动 Fork 仓库到你的账号、clone 到本地、启动配置向导。
 
 向导会处理剩下的一切：
 
