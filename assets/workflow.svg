@@ -1,63 +1,94 @@
-<svg width="860" height="220" viewBox="0 0 860 220" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+<svg width="860" height="220" viewBox="0 0 860 220" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif">
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <marker id="arr-gray" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arr-indigo" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#6366f1"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="860" height="220" rx="16" fill="#0f0f1a"/>
+  <rect width="860" height="220" fill="#ffffff"/>
 
-  <!-- Step 1: RSS Sources -->
-  <rect x="24" y="50" width="148" height="120" rx="12" fill="#1a1a2e" stroke="#2d2d4e" stroke-width="1.5"/>
-  <text x="98" y="80" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="600" letter-spacing="0.05em">NEWS SOURCES</text>
-  <text x="98" y="102" text-anchor="middle" fill="#6b7280" font-size="10">OpenAI · DeepMind</text>
-  <text x="98" y="118" text-anchor="middle" fill="#6b7280" font-size="10">arXiv · HuggingFace</text>
-  <text x="98" y="134" text-anchor="middle" fill="#6b7280" font-size="10">TechCrunch · Verge</text>
-  <text x="98" y="150" text-anchor="middle" fill="#6b7280" font-size="10">+ 8 Research Blogs</text>
+  <!-- ── SECTION 1: One-time Setup ─────────────────────────────── -->
+  <rect x="16" y="12" width="292" height="196" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="162" y="34" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="0.08em">ONE-TIME SETUP</text>
 
-  <!-- Arrow 1 -->
-  <line x1="172" y1="110" x2="210" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Fork box -->
+  <rect x="32" y="44" width="116" height="52" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="90" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Fork</text>
+  <text x="90" y="82" text-anchor="middle" fill="#64748b" font-size="10">on GitHub</text>
 
-  <!-- Step 2: GitHub Actions -->
-  <rect x="214" y="50" width="148" height="120" rx="12" fill="#1a1a2e" stroke="#2d2d4e" stroke-width="1.5"/>
-  <text x="288" y="80" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="600" letter-spacing="0.05em">GITHUB ACTIONS</text>
-  <text x="288" y="104" text-anchor="middle" fill="#6b7280" font-size="10">Triggers at 06:00 UTC</text>
-  <text x="288" y="122" text-anchor="middle" fill="#6b7280" font-size="10">Fetches RSS feeds</text>
-  <text x="288" y="140" text-anchor="middle" fill="#6b7280" font-size="10">Free · No server</text>
-  <text x="288" y="158" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="500">100% Free</text>
+  <!-- arrow -->
+  <line x1="150" y1="70" x2="168" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- Arrow 2 -->
-  <line x1="362" y1="110" x2="400" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Setup wizard box -->
+  <rect x="172" y="44" width="120" height="52" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="232" y="66" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">python3 setup.py</text>
+  <text x="232" y="82" text-anchor="middle" fill="#c7d2fe" font-size="10">2 min · guided</text>
 
-  <!-- Step 3: Claude -->
-  <rect x="404" y="50" width="148" height="120" rx="12" fill="#1a1a2e" stroke="#2d2d4e" stroke-width="1.5"/>
-  <text x="478" y="80" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="600" letter-spacing="0.05em">CLAUDE API</text>
-  <text x="478" y="104" text-anchor="middle" fill="#6b7280" font-size="10">Reads all articles</text>
-  <text x="478" y="122" text-anchor="middle" fill="#6b7280" font-size="10">Generates 5 sections</text>
-  <text x="478" y="140" text-anchor="middle" fill="#6b7280" font-size="10">Trend analysis</text>
-  <text x="478" y="158" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="500">~$0.05 / day</text>
+  <!-- down arrow -->
+  <line x1="232" y1="98" x2="232" y2="118" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- Arrow 3 -->
-  <line x1="552" y1="110" x2="590" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Secrets + config box -->
+  <rect x="32" y="122" width="260" height="72" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="36" y="142" fill="#22c55e" font-size="11">✓</text>
+  <text x="50" y="142" fill="#475569" font-size="10">GitHub Secrets written automatically</text>
+  <text x="36" y="160" fill="#22c55e" font-size="11">✓</text>
+  <text x="50" y="160" fill="#475569" font-size="10">config.yml updated &amp; pushed</text>
+  <text x="36" y="178" fill="#22c55e" font-size="11">✓</text>
+  <text x="50" y="178" fill="#475569" font-size="10">Ready — no code editing needed</text>
 
-  <!-- Step 4: Gmail -->
-  <rect x="594" y="50" width="148" height="120" rx="12" fill="#1a1a2e" stroke="#2d2d4e" stroke-width="1.5"/>
-  <text x="668" y="80" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="600" letter-spacing="0.05em">GMAIL SMTP</text>
-  <text x="668" y="104" text-anchor="middle" fill="#6b7280" font-size="10">Styled HTML email</text>
-  <text x="668" y="122" text-anchor="middle" fill="#6b7280" font-size="10">Delivered to inbox</text>
-  <text x="668" y="140" text-anchor="middle" fill="#6b7280" font-size="10">Any recipient</text>
-  <text x="668" y="158" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="500">Free</text>
+  <!-- ── BIG ARROW between sections ───────────────────────── -->
+  <line x1="316" y1="110" x2="352" y2="110" stroke="#6366f1" stroke-width="2.5" marker-end="url(#arr-indigo)"/>
+  <text x="334" y="104" text-anchor="middle" fill="#6366f1" font-size="9" font-weight="700">THEN</text>
 
-  <!-- Arrow 4 -->
-  <line x1="742" y1="110" x2="780" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- ── SECTION 2: Every Morning ──────────────────────────────── -->
+  <rect x="356" y="12" width="488" height="196" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="600" y="34" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="0.08em">EVERY MORNING · FULLY AUTOMATIC</text>
 
-  <!-- Step 5: Inbox -->
-  <rect x="784" y="50" width="52" height="120" rx="12" fill="#4f46e5" stroke="#6366f1" stroke-width="1.5"/>
-  <text x="810" y="95" text-anchor="middle" fill="#fff" font-size="22">📬</text>
-  <text x="810" y="122" text-anchor="middle" fill="#c7d2fe" font-size="9" font-weight="600">YOUR</text>
-  <text x="810" y="136" text-anchor="middle" fill="#c7d2fe" font-size="9" font-weight="600">INBOX</text>
+  <!-- RSS box -->
+  <rect x="372" y="44" width="104" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="424" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">RSS Feeds</text>
+  <text x="424" y="83" text-anchor="middle" fill="#64748b" font-size="10">20+ sources</text>
+  <text x="424" y="99" text-anchor="middle" fill="#64748b" font-size="10">arXiv · blogs</text>
+  <text x="424" y="115" text-anchor="middle" fill="#64748b" font-size="10">news · papers</text>
 
-  <!-- Title -->
-  <text x="430" y="202" text-anchor="middle" fill="#4b5563" font-size="11">📡 AI Dispatch · github.com/Yifannnnnnnnw/ai-dispatch</text>
+  <!-- arrow -->
+  <line x1="478" y1="84" x2="496" y2="84" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <!-- LLM box -->
+  <rect x="500" y="44" width="104" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="552" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">LLM Analysis</text>
+  <text x="552" y="83" text-anchor="middle" fill="#64748b" font-size="10">Gemini · Claude</text>
+  <text x="552" y="99" text-anchor="middle" fill="#64748b" font-size="10">5 sections</text>
+  <text x="552" y="115" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Free (Gemini)</text>
+
+  <!-- arrow -->
+  <line x1="606" y1="84" x2="624" y2="84" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <!-- Email box -->
+  <rect x="628" y="44" width="104" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="680" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Email Digest</text>
+  <text x="680" y="83" text-anchor="middle" fill="#64748b" font-size="10">Styled HTML</text>
+  <text x="680" y="99" text-anchor="middle" fill="#64748b" font-size="10">via Gmail SMTP</text>
+  <text x="680" y="115" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Free</text>
+
+  <!-- arrow -->
+  <line x1="734" y1="84" x2="752" y2="84" stroke="#6366f1" stroke-width="2" marker-end="url(#arr-indigo)"/>
+
+  <!-- Inbox box -->
+  <rect x="756" y="44" width="72" height="80" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="792" y="80" text-anchor="middle" font-size="26">📬</text>
+  <text x="792" y="104" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">YOUR</text>
+  <text x="792" y="116" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">INBOX</text>
+
+  <!-- What you get bullets -->
+  <text x="372" y="152" fill="#1e293b" font-size="10" font-weight="700">What's inside:</text>
+  <text x="372" y="168" fill="#64748b" font-size="10">📌 Top Stories · 📈 Trends · 🔬 Papers · 📖 Blog Pick · 💡 Today's Signal</text>
+  <text x="372" y="185" fill="#94a3b8" font-size="10">GitHub Actions runs free · No server · No subscription</text>
+
+  <!-- Footer -->
+  <text x="430" y="210" text-anchor="middle" fill="#cbd5e1" font-size="9.5">📡 AI Dispatch · github.com/Yifannnnnnnnw/ai-dispatch</text>
 </svg>
