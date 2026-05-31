@@ -34,9 +34,30 @@ Every email contains five structured sections:
 
 ---
 
-### Step 0 — Install GitHub CLI
+### Step 0 — Install Git and GitHub CLI
 
-The setup wizard uses `gh` to write your secrets automatically. Install it once, then you're set.
+**Git** (for cloning) and **gh** (for writing secrets automatically) are both required.
+
+#### Install Git
+
+```bash
+# macOS — comes pre-installed; if missing:
+xcode-select --install
+```
+
+```powershell
+# Windows
+winget install Git.Git
+```
+
+```bash
+# Linux (Debian / Ubuntu)
+sudo apt install git
+```
+
+> **Windows:** After `winget` installs Git, **close and reopen your terminal** before continuing.
+
+#### Install GitHub CLI
 
 ```bash
 # macOS
@@ -48,14 +69,14 @@ brew install gh
 winget install GitHub.cli
 ```
 
-> **Windows:** `winget` does not update the current terminal's PATH. After installation, **close and reopen your terminal** before running `gh`.
-
 ```bash
 # Linux (Debian / Ubuntu)
 sudo apt install gh
 ```
 
-Then log in:
+> **Windows:** Same as above — **reopen your terminal** after installation so `gh` is on your PATH.
+
+#### Log in to GitHub
 
 ```bash
 gh auth login
@@ -63,7 +84,7 @@ gh auth login
 
 Follow the prompts — select **GitHub.com → HTTPS → Login with a web browser**.
 
-> Already have `gh` installed? Skip to Step 1.
+> Already have Git and `gh` set up? Skip to Step 1.
 
 ---
 
@@ -298,9 +319,30 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 ---
 
-### 第零步：安装 GitHub CLI
+### 第零步：安装 Git 和 GitHub CLI
 
-配置向导通过 `gh` 自动写入 Secrets，需要提前安装一次。
+**Git**（用于 clone）和 **gh**（用于自动写入 Secrets）都需要提前安装。
+
+#### 安装 Git
+
+```bash
+# macOS — 一般已预装；如果没有：
+xcode-select --install
+```
+
+```powershell
+# Windows
+winget install Git.Git
+```
+
+```bash
+# Linux（Debian / Ubuntu）
+sudo apt install git
+```
+
+> **Windows 注意：** `winget` 安装完后，**关闭终端重新打开**再继续。
+
+#### 安装 GitHub CLI
 
 ```bash
 # macOS
@@ -312,14 +354,14 @@ brew install gh
 winget install GitHub.cli
 ```
 
-> **Windows 注意：** `winget` 安装后不会自动更新当前终端的 PATH，**请关闭终端重新打开**，再运行 `gh`。
-
 ```bash
 # Linux（Debian / Ubuntu）
 sudo apt install gh
 ```
 
-然后登录：
+> **Windows 注意：** 同上，安装后**重新打开终端**，`gh` 才能被识别。
+
+#### 登录 GitHub
 
 ```bash
 gh auth login
@@ -327,7 +369,7 @@ gh auth login
 
 按提示选择 **GitHub.com → HTTPS → Login with a web browser**，完成授权即可。
 
-> 已经安装了 `gh`？跳过这步直接看第一步。
+> Git 和 `gh` 都已装好？跳过这步直接看第一步。
 
 ---
 
