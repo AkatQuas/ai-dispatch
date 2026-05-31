@@ -36,14 +36,20 @@ Every email contains five structured sections:
 
 ### Step 1 — Fork, clone, and launch
 
-Run this single command:
+Run these commands:
 
 ```bash
 # macOS / Linux
-gh repo fork Yifannnnnnnnw/ai-dispatch --clone && cd ai-dispatch && python3 setup.py
+gh repo fork Yifannnnnnnnw/ai-dispatch --clone
+cd ai-dispatch
+python3 setup.py
+```
 
+```powershell
 # Windows
-gh repo fork Yifannnnnnnnw/ai-dispatch --clone && cd ai-dispatch && python setup.py
+gh repo fork Yifannnnnnnnw/ai-dispatch --clone
+cd ai-dispatch
+python setup.py
 ```
 
 This forks the repo to your account, clones it locally, and launches the setup wizard — all in one step.
@@ -261,14 +267,20 @@ Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: htt
 
 ### 第一步：一键 Fork、clone 并启动向导
 
-运行这一条命令：
+运行以下命令：
 
 ```bash
 # macOS / Linux
-gh repo fork Yifannnnnnnnw/ai-dispatch --clone && cd ai-dispatch && python3 setup.py
+gh repo fork Yifannnnnnnnw/ai-dispatch --clone
+cd ai-dispatch
+python3 setup.py
+```
 
+```powershell
 # Windows
-gh repo fork Yifannnnnnnnw/ai-dispatch --clone && cd ai-dispatch && python setup.py
+gh repo fork Yifannnnnnnnw/ai-dispatch --clone
+cd ai-dispatch
+python setup.py
 ```
 
 这条命令会自动 Fork 仓库到你的账号、clone 到本地、启动配置向导，一步完成。
