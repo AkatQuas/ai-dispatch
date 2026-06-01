@@ -39,7 +39,7 @@ jobs:
 
       - name: Set up Python
         if: steps.timecheck.outputs.should_send == 'true' || github.event_name == 'workflow_dispatch'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
