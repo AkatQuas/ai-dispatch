@@ -14,19 +14,27 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check send hour
         id: timecheck
         run: |
           CONFIG_HOUR=$(grep 'send_hour_utc:' config.yml | awk '{print $2}')
           CURRENT_HOUR=$(date -u +%-H)
-          echo "Scheduled hour (UTC): $CONFIG_HOUR  |  Current hour (UTC): $CURRENT_HOUR"
-          if [ "$CURRENT_HOUR" = "$CONFIG_HOUR" ]; then
+          CURRENT_DATE=$(date -u +%Y-%m-%d)
+          LAST_SENT=$(python3 -c "import json; d=json.load(open('sent_history.json')); print(d.get('last_sent_date',''))" 2>/dev/null || echo "")
+
+          echo "Config hour (UTC): $CONFIG_HOUR | Current hour (UTC): $CURRENT_HOUR | Last sent: $LAST_SENT | Today: $CURRENT_DATE"
+
+          if [ "$LAST_SENT" = "$CURRENT_DATE" ]; then
+            echo "Already sent today, skipping."
+            echo "should_send=false" >> $GITHUB_OUTPUT
+          elif [ "$CURRENT_HOUR" -ge "$CONFIG_HOUR" ]; then
+            echo "Hour $CURRENT_HOUR >= $CONFIG_HOUR and not yet sent today — will send."
             echo "should_send=true" >> $GITHUB_OUTPUT
           else
+            echo "Hour $CURRENT_HOUR < $CONFIG_HOUR, too early."
             echo "should_send=false" >> $GITHUB_OUTPUT
-            echo "Not send hour, skipping."
           fi
 
       - name: Set up Python

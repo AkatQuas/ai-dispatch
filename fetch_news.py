@@ -21,19 +21,22 @@ def load_config() -> dict:
         return yaml.safe_load(f)
 
 
-def load_history() -> set[str]:
+def load_history() -> dict:
     if HISTORY_PATH.exists():
-        data = json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
-        return set(data.get("urls", []))
-    return set()
+        return json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
+    return {"urls": [], "last_sent_date": ""}
 
 
-def save_history(history: set[str], new_url: str) -> None:
-    updated = list(history | {new_url})
+def save_history(history: dict, new_url: str | None) -> None:
+    urls = set(history.get("urls", []))
+    if new_url:
+        urls.add(new_url)
+    updated = list(urls)
     if len(updated) > HISTORY_MAX:
         updated = updated[-HISTORY_MAX:]
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     HISTORY_PATH.write_text(
-        json.dumps({"urls": updated, "updated": datetime.now().isoformat()}, indent=2, ensure_ascii=False),
+        json.dumps({"urls": updated, "last_sent_date": today}, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
 
@@ -311,13 +314,14 @@ def send_email(html_body: str) -> None:
 if __name__ == "__main__":
     cfg = load_config()
     history = load_history()
+    sent_urls = set(history.get("urls", []))
 
     print("Fetching news articles...")
     articles = fetch_recent_articles(cfg)
     print(f"Found {len(articles)} news articles")
 
     print("Fetching blog/classic candidates...")
-    blog_candidates = fetch_blog_candidates(cfg, history)
+    blog_candidates = fetch_blog_candidates(cfg, sent_urls)
     print(f"Found {len(blog_candidates)} unsent blog/classic candidates")
 
     if not articles and not blog_candidates:
@@ -334,8 +338,8 @@ if __name__ == "__main__":
     recommended_url = extract_recommended_url(summary)
     if recommended_url:
         print(f"Recording recommended URL: {recommended_url}")
-        save_history(history, recommended_url)
     else:
-        print("[WARN] Could not extract recommended URL from output, history not updated.")
+        print("[WARN] Could not extract recommended URL from output.")
+    save_history(history, recommended_url)
 
     print("Done!")
