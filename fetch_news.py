@@ -220,16 +220,26 @@ HTML 格式模板：
 
     if provider == "gemini":
         from google import genai as google_genai
+        from google.genai import types as genai_types
+        model = d.get("gemini_model", "gemini-2.0-flash")
         client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
         response = client.models.generate_content(
-            model=d["model"],
+            model=model,
             contents=prompt,
+            config=genai_types.GenerateContentConfig(
+                max_output_tokens=d["max_tokens"],
+            ),
         )
-        return response.text
+        text = response.text
+        if not text:
+            finish = (response.candidates[0].finish_reason if response.candidates else "no candidates")
+            raise RuntimeError(f"Gemini returned empty response (finish_reason={finish})")
+        return text
     else:
+        model = d.get("anthropic_model", "claude-sonnet-4-6")
         client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         msg = client.messages.create(
-            model=d["model"],
+            model=model,
             max_tokens=d["max_tokens"],
             messages=[{"role": "user", "content": prompt}],
         )
