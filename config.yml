@@ -130,17 +130,17 @@ provider: anthropic        # ← 选择 LLM 提供商
                           #   gemini    — 免费，申请 key: https://aistudio.google.com/apikey
                           #   anthropic — 付费，申请 key: https://console.anthropic.com
 
-send_hour_utc: 7          # ← fork 用户改这里调整发送时间（UTC 小时，0-23）
-                          #   BST（夏令时 Apr-Oct，UTC+1）: 4 → 到达约 07:00 BST
-                          #   GMT（冬令时 Nov-Mar，UTC+0）: 4 → 到达约 07:00 GMT
-                          #   GitHub Actions 常延迟 1-3 小时，建议比目标时间提前 2 小时设置
+send_hour_utc: 6          # ← fork 用户改这里调整发送时间（UTC 小时，0-23）
+                          #   BST（夏令时 Apr-Oct，UTC+1）: 6 → 到达约 07:00 BST
+                          #   GMT（冬令时 Nov-Mar，UTC+0）: 7 → 到达约 07:00 GMT
+                          #   cron 每 15 分钟在目标窗口内触发，延迟通常 < 30 分钟
 
 digest:
   news_hours: 24          # 新闻回溯窗口（小时）
   blog_days: 90           # 博客 RSS 回溯窗口（天）
   news_per_source: 50     # 每个新闻源最多抓取条数
   blog_per_source: 20     # 每个博客最多抓取条数
-  model: claude-sonnet-4-6  # gemini: gemini-2.0-flash（免费）/ gemini-2.5-pro（更强）
-                           # anthropic: claude-sonnet-4-6 / claude-opus-4-7（更强但更贵）
+  anthropic_model: claude-sonnet-4-6   # anthropic: claude-sonnet-4-6 / claude-opus-4-8（更强但更贵）
+  gemini_model: gemini-2.0-flash       # gemini: gemini-2.0-flash（免费稳定）/ gemini-2.5-pro（更强）
   max_tokens: 6000
   output_language: English  # 摘要输出语言，可改为 中文
