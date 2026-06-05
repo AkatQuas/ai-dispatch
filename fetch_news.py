@@ -1,15 +1,14 @@
-import feedparser
-import anthropic
-import smtplib
 import json
-import os
 import re
 import sys
-import yaml
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+import feedparser
+import yaml
+
+from llm import DEFAULT_MODEL, complete
+from send_lark_message import lark_configured, send_lark_digest
 
 HISTORY_PATH = Path(__file__).parent / "sent_history.json"
 HISTORY_MAX = 1000  # 最多保留最近 1000 条，防止文件无限增长
@@ -41,9 +40,13 @@ def save_history(history: dict, new_url: str | None) -> None:
     )
 
 
-def extract_recommended_url(html: str) -> str | None:
-    """从 Claude 输出的 HTML 中提取 blog-pick 块里的链接。"""
-    match = re.search(r'<div class="blog-pick">.*?<a href="([^"]+)"', html, re.DOTALL)
+def extract_recommended_url(md: str) -> str | None:
+    """从 digest markdown 的「今日推荐博客」小节中提取链接。"""
+    match = re.search(
+        r"(?:###?\s*📖\s*今日推荐博客|今日推荐博客).*?\[.*?\]\(([^)]+)\)",
+        md,
+        re.DOTALL,
+    )
     return match.group(1) if match else None
 
 
@@ -122,8 +125,8 @@ def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
 
 
 def summarize(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> str:
-    provider = cfg.get("provider", "anthropic")
     d = cfg["digest"]
+    model = d.get("model", DEFAULT_MODEL)
 
     topics_str = "、".join(cfg["topics"])
     lang = d.get("output_language", "中文")
@@ -152,7 +155,7 @@ def summarize(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> s
 
 {blogs_text}
 
-请完成以下五个部分，严格使用 HTML 格式输出（不要加 markdown 代码块、不要加 ```html）：
+请完成以下五个部分，严格使用 Markdown 格式输出（不要加代码块围栏、不要输出 HTML 标签）：
 
 第一部分：重点新闻（10-15条，优先与用户关注方向相关）
 每条包含：发生了什么（1句）、技术/商业意义（2-3句，要有判断和立场）、与其他动态的关联（如有）。
@@ -171,157 +174,59 @@ def summarize(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> s
 第五部分：今日信号
 最关键的一个判断，不超过 60 字。
 
-HTML 格式模板：
+Markdown 格式模板：
 
-<h2>📡 AI Dispatch · {today}</h2>
-<p class="intro">新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇 · 聚焦 {topics_str}</p>
+📡 AI Dispatch · {today}
 
-<div class="section-title">📌 重点新闻</div>
+新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇 · 聚焦 {topics_str}
 
-<div class="item">
-  <h3><a href="URL">标题（{lang}）</a></h3>
-  <span class="meta">来源：XXX · 时间</span>
-  <p><strong>事件：</strong>……</p>
-  <p><strong>意义：</strong>……</p>
-  <p class="tag">关联：……</p>
-</div>
+★ 重点新闻
 
-<div class="section-title">📈 趋势分析</div>
+☆ [标题（{lang}）](URL)
+来源：XXX · 时间
 
-<div class="trend">
-  <h3>趋势名称</h3>
-  <p>……</p>
-</div>
+**事件：**……
 
-<div class="section-title">🔬 值得深挖</div>
+**意义：**……
 
-<div class="deep-read">
-  <h3><a href="URL">论文/报告标题</a></h3>
-  <p>……</p>
-</div>
+关联：……
 
-<div class="section-title">📖 今日推荐博客</div>
+★ 趋势分析
 
-<div class="blog-pick">
-  <h3><a href="URL">文章标题</a></h3>
-  <span class="meta">作者/来源 · 时间</span>
-  <p class="blog-why">……为什么值得读……</p>
-  <ul>
-    <li>核心观点一</li>
-    <li>核心观点二</li>
-    <li>核心观点三</li>
-  </ul>
-  <p class="blog-audience">适合：…… · 阅读时间：约 XX 分钟</p>
-</div>
+☆ 趋势名称
+……
 
-<div class="closing">
-  <strong>今日信号：</strong>……
-</div>"""
+★ 值得深挖
 
-    if provider == "gemini":
-        from google import genai as google_genai
-        from google.genai import types as genai_types
-        model = d.get("gemini_model", "gemini-2.0-flash")
-        client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-        response = client.models.generate_content(
-            model=model,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                max_output_tokens=d["max_tokens"],
-            ),
-        )
-        text = response.text
-        if not text:
-            finish = (response.candidates[0].finish_reason if response.candidates else "no candidates")
-            raise RuntimeError(f"Gemini returned empty response (finish_reason={finish})")
-        return text
-    else:
-        model = d.get("anthropic_model", "claude-sonnet-4-6")
-        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-        msg = client.messages.create(
-            model=model,
-            max_tokens=d["max_tokens"],
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return msg.content[0].text
+☆ [论文/报告标题](URL)
+……
 
+★ 今日推荐博客
 
-EMAIL_CSS = """
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-       background: #f0f0f5; margin: 0; padding: 20px; color: #222; }
-.wrapper { max-width: 700px; margin: auto; background: #fff;
-           border-radius: 10px; overflow: hidden;
-           box-shadow: 0 2px 12px rgba(0,0,0,.10); }
-.header { background: #0f0f1a; color: #fff; padding: 28px 36px; }
-.header h1 { margin: 0; font-size: 22px; letter-spacing: -.3px; }
-.body { padding: 28px 36px; }
-h2 { color: #0f0f1a; margin-top: 0; font-size: 20px; }
-.intro { color: #666; font-size: 13px; margin-bottom: 28px; }
-.section-title { font-weight: 700; font-size: 11px; text-transform: uppercase;
-                 letter-spacing: .1em; color: #999; margin: 32px 0 14px;
-                 padding-bottom: 6px; border-bottom: 1px solid #eee; }
-.item { border-left: 3px solid #4f46e5; padding: 14px 18px;
-        margin-bottom: 18px; background: #fafafa; border-radius: 0 8px 8px 0; }
-.item h3 { margin: 0 0 4px; font-size: 15px; line-height: 1.4; }
-.item h3 a { color: #1a1a2e; text-decoration: none; }
-.item h3 a:hover { text-decoration: underline; }
-.meta { font-size: 11px; color: #aaa; display: block; margin-bottom: 8px; }
-.item p { margin: 6px 0 0; font-size: 14px; line-height: 1.7; color: #444; }
-.item p.tag { font-size: 12px; color: #7c6fcd; margin-top: 8px; }
-.trend { border-left: 3px solid #059669; padding: 14px 18px;
-         margin-bottom: 18px; background: #f0fdf4; border-radius: 0 8px 8px 0; }
-.trend h3 { margin: 0 0 8px; font-size: 15px; color: #065f46; }
-.trend p { margin: 0; font-size: 14px; line-height: 1.7; color: #444; }
-.deep-read { border-left: 3px solid #d97706; padding: 14px 18px;
-             margin-bottom: 18px; background: #fffbeb; border-radius: 0 8px 8px 0; }
-.deep-read h3 { margin: 0 0 8px; font-size: 15px; }
-.deep-read h3 a { color: #92400e; text-decoration: none; }
-.deep-read p { margin: 0; font-size: 14px; line-height: 1.7; color: #444; }
-.blog-pick { border-left: 3px solid #db2777; padding: 14px 18px;
-             margin-bottom: 18px; background: #fdf2f8; border-radius: 0 8px 8px 0; }
-.blog-pick h3 { margin: 0 0 4px; font-size: 15px; }
-.blog-pick h3 a { color: #831843; text-decoration: none; }
-.blog-pick h3 a:hover { text-decoration: underline; }
-.blog-why { margin: 10px 0 8px; font-size: 14px; line-height: 1.7; color: #444; }
-.blog-pick ul { margin: 8px 0; padding-left: 20px; font-size: 14px;
-                line-height: 1.8; color: #444; }
-.blog-audience { font-size: 12px; color: #9d174d; margin: 8px 0 0; }
-.closing { background: #1a1a2e; color: #e0e0ff; border-radius: 8px;
-           padding: 16px 20px; margin-top: 28px; font-size: 14px; line-height: 1.6; }
-.closing strong { color: #fff; }
-.footer { padding: 16px 36px; font-size: 12px; color: #bbb;
-          border-top: 1px solid #eee; text-align: center; }
-"""
+☆ [文章标题](URL)
+作者/来源 · 时间
 
+……为什么值得读……
 
-def send_email(html_body: str) -> None:
-    today = datetime.now().strftime("%m/%d")
-    subject = f"📡 AI Dispatch · {today}"
+- 核心观点一
+- 核心观点二
+- 核心观点三
 
-    full_html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>{EMAIL_CSS}</style>
-</head>
-<body>
-<div class="wrapper">
-  <div class="header"><h1>📡 AI Dispatch</h1></div>
-  <div class="body">{html_body}</div>
-  <div class="footer">AI Dispatch · Powered by Claude + GitHub Actions · 每日 07:00 BST 自动发送</div>
-</div>
-</body></html>"""
+适合：…… · 阅读时间：约 XX 分钟
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = os.environ["GMAIL_USER"]
-    msg["To"] = os.environ["RECIPIENT_EMAIL"]
-    msg.attach(MIMEText(full_html, "html", "utf-8"))
+**今日信号：**……"""
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(os.environ["GMAIL_USER"], os.environ["GMAIL_APP_PASSWORD"])
-        server.sendmail(os.environ["GMAIL_USER"], os.environ["RECIPIENT_EMAIL"], msg.as_string())
+    return complete(prompt, model=model, max_tokens=d["max_tokens"])
 
 
 if __name__ == "__main__":
+    if not lark_configured():
+        print(
+            "[ERROR] Lark not configured. Set LARK_APP_ID, LARK_SECRET, LARK_RECEIVER.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     cfg = load_config()
     history = load_history()
     sent_urls = set(history.get("urls", []))
@@ -338,12 +243,14 @@ if __name__ == "__main__":
         print("No content found, skipping.")
         sys.exit(0)
 
-    provider = cfg.get("provider", "anthropic")
-    print(f"Summarizing with {provider}...")
+    model = cfg["digest"].get("model", DEFAULT_MODEL)
+    print(f"Summarizing with DeepSeek ({model})...")
     summary = summarize(articles, blog_candidates, cfg)
 
-    print("Sending email...")
-    send_email(summary)
+    print("Sending Lark message...")
+    if not send_lark_digest(summary):
+        print("[ERROR] Lark message failed.", file=sys.stderr)
+        sys.exit(1)
 
     recommended_url = extract_recommended_url(summary)
     if recommended_url:

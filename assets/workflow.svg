@@ -61,28 +61,28 @@
   <!-- LLM box -->
   <rect x="500" y="44" width="104" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="552" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">LLM Analysis</text>
-  <text x="552" y="83" text-anchor="middle" fill="#64748b" font-size="10">Gemini · Claude</text>
+  <text x="552" y="83" text-anchor="middle" fill="#64748b" font-size="10">DeepSeek API</text>
   <text x="552" y="99" text-anchor="middle" fill="#64748b" font-size="10">5 sections</text>
   <text x="552" y="115" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Free (Gemini)</text>
 
   <!-- arrow -->
   <line x1="606" y1="84" x2="624" y2="84" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- Email box -->
+  <!-- Lark box -->
   <rect x="628" y="44" width="104" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="680" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Email Digest</text>
-  <text x="680" y="83" text-anchor="middle" fill="#64748b" font-size="10">Styled HTML</text>
-  <text x="680" y="99" text-anchor="middle" fill="#64748b" font-size="10">via Gmail SMTP</text>
+  <text x="680" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Lark Card</text>
+  <text x="680" y="83" text-anchor="middle" fill="#64748b" font-size="10">Interactive</text>
+  <text x="680" y="99" text-anchor="middle" fill="#64748b" font-size="10">via Feishu API</text>
   <text x="680" y="115" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">Free</text>
 
   <!-- arrow -->
   <line x1="734" y1="84" x2="752" y2="84" stroke="#6366f1" stroke-width="2" marker-end="url(#arr-indigo)"/>
 
-  <!-- Inbox box -->
+  <!-- Lark inbox box -->
   <rect x="756" y="44" width="72" height="80" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
-  <text x="792" y="80" text-anchor="middle" font-size="26">📬</text>
+  <text x="792" y="80" text-anchor="middle" font-size="26">💬</text>
   <text x="792" y="104" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">YOUR</text>
-  <text x="792" y="116" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">INBOX</text>
+  <text x="792" y="116" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">LARK</text>
 
   <!-- What you get bullets -->
   <text x="372" y="152" fill="#1e293b" font-size="10" font-weight="700">What's inside:</text>
@@ -90,5 +90,5 @@
   <text x="372" y="185" fill="#94a3b8" font-size="10">GitHub Actions runs free · No server · No subscription</text>
 
   <!-- Footer -->
-  <text x="430" y="210" text-anchor="middle" fill="#cbd5e1" font-size="9.5">📡 AI Dispatch · github.com/Yifannnnnnnnw/ai-dispatch</text>
+  <text x="430" y="210" text-anchor="middle" fill="#cbd5e1" font-size="9.5">📡 AI Dispatch · github.com/AkatQuas/ai-dispatch</text>
 </svg>

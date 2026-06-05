@@ -3,22 +3,6 @@ name: ⚙️ Setup
 on:
   workflow_dispatch:
     inputs:
-      provider:
-        description: 'LLM provider — gemini (free) or anthropic (paid)'
-        required: true
-        default: gemini
-        type: choice
-        options:
-          - gemini
-          - anthropic
-      gmail_user:
-        description: 'Your Gmail address  (e.g. you@gmail.com)'
-        required: true
-        type: string
-      recipient_email:
-        description: 'Recipient email  (leave blank to use Gmail address above)'
-        required: false
-        type: string
       send_hour_utc:
         description: 'Send time — UTC hour 0-23  (Beijing 08:00 → 0 | London BST 07:00 → 6 | New York 07:00 → 11)'
         required: true
@@ -32,6 +16,11 @@ on:
         options:
           - English
           - 中文
+      model:
+        description: 'DeepSeek model (e.g. deepseek-v4-flash, deepseek-v4-pro)'
+        required: true
+        default: deepseek-v4-flash
+        type: string
 
 jobs:
   setup:
@@ -48,10 +37,9 @@ jobs:
           python3 - <<'EOF'
           import re, sys
 
-          provider  = "${{ inputs.provider }}"
           hour      = "${{ inputs.send_hour_utc }}".strip()
           language  = "${{ inputs.output_language }}"
-          model     = "gemini-2.0-flash" if provider == "gemini" else "claude-sonnet-4-6"
+          model     = "${{ inputs.model }}".strip()
 
           try:
               hour_int = int(hour)
@@ -60,10 +48,13 @@ jobs:
               print(f"ERROR: send_hour_utc must be 0-23, got '{hour}'")
               sys.exit(1)
 
+          if not model:
+              print("ERROR: model must not be empty")
+              sys.exit(1)
+
           with open("config.yml", encoding="utf-8") as f:
               content = f.read()
 
-          content = re.sub(r"^provider:\s*\S+",       f"provider: {provider}",  content, flags=re.MULTILINE)
           content = re.sub(r"^send_hour_utc:\s*\d+",  f"send_hour_utc: {hour_int}", content, flags=re.MULTILINE)
           content = re.sub(r"^(\s+model:\s*)\S+",     rf"\g<1>{model}",          content, flags=re.MULTILINE)
           content = re.sub(r"^(\s+output_language:\s*)\S+", rf"\g<1>{language}", content, flags=re.MULTILINE)
@@ -71,7 +62,7 @@ jobs:
           with open("config.yml", "w", encoding="utf-8") as f:
               f.write(content)
 
-          print(f"✓ provider={provider}  model={model}  send_hour_utc={hour_int}  language={language}")
+          print(f"✓ model={model}  send_hour_utc={hour_int}  language={language}")
           EOF
 
       - name: Commit and push
@@ -85,19 +76,6 @@ jobs:
 
       - name: Print secrets checklist
         run: |
-          PROVIDER="${{ inputs.provider }}"
-          GMAIL="${{ inputs.gmail_user }}"
-          RECIPIENT="${{ inputs.recipient_email }}"
-          RECIPIENT="${RECIPIENT:-$GMAIL}"
-
-          if [ "$PROVIDER" = "gemini" ]; then
-            KEY_NAME="GEMINI_API_KEY"
-            KEY_HINT="Get a free key at https://aistudio.google.com/apikey"
-          else
-            KEY_NAME="ANTHROPIC_API_KEY"
-            KEY_HINT="Get a key at https://console.anthropic.com"
-          fi
-
           SECRETS_URL="https://github.com/${{ github.repository }}/settings/secrets/actions/new"
 
           echo ""
@@ -109,18 +87,17 @@ jobs:
           echo ""
           echo "  Secret name            Value"
           echo "  ─────────────────────────────────────────────────"
-          echo "  $KEY_NAME"
-          echo "    → $KEY_HINT"
+          echo "  DEEPSEEK_API_KEY"
+          echo "    → https://platform.deepseek.com/api_keys"
           echo ""
-          echo "  GMAIL_USER"
-          echo "    → $GMAIL"
+          echo "  LARK_APP_ID"
+          echo "    → Feishu app ID from https://open.feishu.cn/app"
           echo ""
-          echo "  GMAIL_APP_PASSWORD"
-          echo "    → your 16-char Gmail app password"
-          echo "    → myaccount.google.com/security → App Passwords"
+          echo "  LARK_SECRET"
+          echo "    → Feishu app secret"
           echo ""
-          echo "  RECIPIENT_EMAIL"
-          echo "    → $RECIPIENT"
+          echo "  LARK_RECEIVER"
+          echo "    → Recipient union_id (im:message permission required)"
           echo ""
           echo "  After adding secrets, run:"
           echo "  Actions → ✅ Check Setup → Run workflow"
