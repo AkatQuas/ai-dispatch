@@ -4,18 +4,16 @@
 #  完整说明：README.md
 # ╚══════════════════════════════════════════════════════════════╝
 
-
 # ──────────────────────────────────────────────
 #  STEP 1 · 告诉 Claude 你关注什么领域
 #  这些主题会直接影响 Claude 的分析角度和重点
 # ──────────────────────────────────────────────
 topics:
-  - robotics
-  - AI agents
-  - large language models
+  - AI and Agents
   - multimodal models
+  - large language models
   - embodied AI
-
+  - robotics
 
 # ──────────────────────────────────────────────
 #  STEP 2 · 选择新闻来源
@@ -23,31 +21,46 @@ topics:
 #  可以自行添加任何支持 RSS 的网站
 # ──────────────────────────────────────────────
 news_feeds:
-  OpenAI Blog:        https://openai.com/blog/rss.xml
-  Google DeepMind:    https://deepmind.google/discover/blog/rss.xml
-  Hugging Face:       https://huggingface.co/blog/feed.xml
-  The Verge AI:       https://www.theverge.com/ai-artificial-intelligence/rss/index.xml
+  Anthropic Official: https://www.anthropic.com/news/feed.xml
+  # arxiv cs.AI: https://rss.arxiv.org/rss/cs.AI
+  # arxiv cs.RO: https://rss.arxiv.org/rss/cs.RO
+  # arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
+  Ben's Bites: https://www.bensbites.com/feed
+  Google DeepMind: https://deepmind.google/discover/blog/rss.xml
+  Google AI Research: https://ai.googleblog.com/feeds/posts/default
+  Hugging Face: https://huggingface.co/blog/feed.xml
+  KDnuggets: https://www.kdnuggets.com/feed
+  Last Week in AI: https://lastweekin.ai/feed
+  MarkTechPost: https://www.marktechpost.com/feed/
+  Meta FAIR Blog: https://ai.meta.com/blog/rss/
   MIT Tech Review AI: https://www.technologyreview.com/topic/artificial-intelligence/feed
-  VentureBeat AI:     https://venturebeat.com/category/ai/feed/
-  TechCrunch AI:      https://techcrunch.com/category/artificial-intelligence/feed/
-  arxiv cs.AI:        https://rss.arxiv.org/rss/cs.AI
-  arxiv cs.RO:        https://rss.arxiv.org/rss/cs.RO
-
+  NVIDIA AI Blog: https://blogs.nvidia.com/blog/category/ai/feed/
+  One Useful Thing (Ethan Mollick): https://www.oneusefulthing.org/feed
+  OpenAI Blog: https://openai.com/blog/rss.xml
+  Simon Willison: https://simonwillison.net/atom/everything/
+  TechCrunch AI: https://techcrunch.com/category/artificial-intelligence/feed/
+  The Verge AI: https://www.theverge.com/ai-artificial-intelligence/rss/index.xml
+  Towards Data Science: https://towardsdatascience.com/feed
+  W&B Fully Connected: https://wandb.ai/fully-connected/feed
+  VentureBeat AI: https://venturebeat.com/category/ai/feed/
 
 # ──────────────────────────────────────────────
 #  STEP 3 · 选择博客订阅
 #  回溯 blog_days 天内的新文章，已推送过的自动跳过
 # ──────────────────────────────────────────────
 blog_feeds:
-  Interconnects (Nathan Lambert):   https://www.interconnects.ai/feed
-  Ahead of AI (Sebastian Raschka):  https://magazine.sebastianraschka.com/feed
-  Import AI (Jack Clark):           https://importai.substack.com/feed
-  The Gradient:                     https://thegradient.pub/rss/
-  One Useful Thing (Ethan Mollick): https://www.oneusefulthing.org/feed
-  AI Snake Oil:                     https://aisnakeoil.substack.com/feed
-  Lilian Weng:                      https://lilianweng.github.io/index.xml
-  Last Week in AI:                  https://lastweekin.ai/feed
-
+  Ahead of AI (Sebastian Raschka): https://magazine.sebastianraschka.com/feed
+  AI Snake Oil: https://aisnakeoil.substack.com/feed
+  Andrej Karpathy Blog: https://karpathy.ai/index.xml
+  Field Guide to AI: https://fieldguidetoai.substack.com/feed
+  Gary Marcus AI Review: https://garymarcus.substack.com/feed
+  HackerNews AI专题: https://hnrss.org/newest?q=AI
+  Interconnects (Nathan Lambert): https://www.interconnects.ai/feed
+  Import AI (Jack Clark): https://importai.substack.com/feed
+  Latent Space AI: https://latentspacepodcast.substack.com/feed
+  Lilian Weng: https://lilianweng.github.io/index.xml
+  The Gradient: https://thegradient.pub/rss/
+  The Batch (Andrew Ng): https://www.deeplearning.ai/the-batch/feed
 
 # ──────────────────────────────────────────────
 #  STEP 4 · 添加经典文章 / 访谈 / 大佬经验分享
@@ -63,41 +76,40 @@ blog_feeds:
 #    note:  一句话说明为什么值得读
 # ──────────────────────────────────────────────
 classics:
-  - title: "Software 2.0"
+  - title: 'Software 2.0'
     url: https://karpathy.medium.com/software-2-0-a64152b37c35
     author: Andrej Karpathy
     type: blog
     year: 2017
     note: AI 重新定义软件开发范式的奠基性文章
 
-  - title: "The Bitter Lesson"
+  - title: 'The Bitter Lesson'
     url: http://www.incompleteideas.net/IncIdeas/BitterLesson.html
     author: Rich Sutton
     type: essay
     year: 2019
     note: 规模和计算力胜过人类先验知识，深度学习成功的根本原因
 
-  - title: "Situational Awareness: The Decade Ahead"
+  - title: 'Situational Awareness: The Decade Ahead'
     url: https://situational-awareness.ai
     author: Leopold Aschenbrenner
     type: essay
     year: 2024
     note: 前 OpenAI 研究员对 AGI 时间线和国家竞争的长篇深度分析
 
-  - title: "Demis Hassabis — Lex Fridman Interview"
+  - title: 'Demis Hassabis — Lex Fridman Interview'
     url: https://www.youtube.com/watch?v=rbkT_xRDa8w
     author: Demis Hassabis / Lex Fridman
     type: interview
     year: 2023
     note: DeepMind CEO 谈机器人、AGI 路径和科学发现
 
-  - title: "What Is ChatGPT Doing … and Why Does It Work?"
+  - title: 'What Is ChatGPT Doing … and Why Does It Work?'
     url: https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/
     author: Stephen Wolfram
     type: blog
     year: 2023
     note: 从计算科学角度深度解析 LLM 工作原理
-
 
 # ──────────────────────────────────────────────
 #  STEP 5（可选）· 高级参数，一般不需要改
@@ -126,21 +138,16 @@ arxiv_keywords:
   - foundation model
   - reasoning
 
-provider: anthropic        # ← 选择 LLM 提供商
-                          #   gemini    — 免费，申请 key: https://aistudio.google.com/apikey
-                          #   anthropic — 付费，申请 key: https://console.anthropic.com
-
-send_hour_utc: 6          # ← fork 用户改这里调整发送时间（UTC 小时，0-23）
-                          #   BST（夏令时 Apr-Oct，UTC+1）: 6 → 到达约 07:00 BST
-                          #   GMT（冬令时 Nov-Mar，UTC+0）: 7 → 到达约 07:00 GMT
-                          #   cron 每 15 分钟在目标窗口内触发，延迟通常 < 30 分钟
+#   BST（夏令时 Apr-Oct，UTC+1）: 6 → 到达约 07:00 BST
+#   GMT（冬令时 Nov-Mar，UTC+0）: 7 → 到达约 07:00 GMT
+#   cron 每 15 分钟在目标窗口内触发，延迟通常 < 30 分钟
+send_hour_utc: 6 # fork 用户改这里调整发送时间（UTC 小时，0-23）
 
 digest:
-  news_hours: 24          # 新闻回溯窗口（小时）
-  blog_days: 90           # 博客 RSS 回溯窗口（天）
-  news_per_source: 50     # 每个新闻源最多抓取条数
-  blog_per_source: 20     # 每个博客最多抓取条数
-  anthropic_model: claude-sonnet-4-6   # anthropic: claude-sonnet-4-6 / claude-opus-4-8（更强但更贵）
-  gemini_model: gemini-2.0-flash       # gemini: gemini-2.0-flash（免费稳定）/ gemini-2.5-pro（更强）
-  max_tokens: 6000
-  output_language: English  # 摘要输出语言，可改为 中文
+  news_hours: 24 # 新闻回溯窗口（小时）
+  blog_days: 90 # 博客 RSS 回溯窗口（天）
+  news_per_source: 50 # 每个新闻源最多抓取条数
+  blog_per_source: 20 # 每个博客最多抓取条数
+  model: deepseek-v4-flash # deepseek-v4-flash | deepseek-v4-pro
+  max_tokens: 10000
+  output_language: 中文 # 摘要输出语言，可改为 中文

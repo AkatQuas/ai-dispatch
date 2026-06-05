@@ -67,13 +67,6 @@ def set_secret(repo: str, name: str, value: str) -> bool:
     r = run(["gh", "secret", "set", name, "--repo", repo, "--body", value])
     return r.returncode == 0
 
-def _fetch_community_gemini_key() -> str | None:
-    """从原始仓库的 Actions 变量中拉取社区共享 Gemini key。"""
-    r = run(["gh", "api", "repos/Yifannnnnnnnw/ai-dispatch/actions/variables/COMMUNITY_GEMINI_KEY",
-             "--jq", ".value"])
-    val = r.stdout.strip()
-    return val if r.returncode == 0 and val else None
-
 # ── 主流程 ───────────────────────────────────────────────────────────────────
 
 def main():
@@ -115,41 +108,19 @@ def main():
         sys.exit(1)
     ok("GitHub CLI 已认证")
 
-    # ── 2. LLM Provider ──────────────────────────────────────────────────────
-    section("选择 LLM Provider")
-    provider = ask_choice(
-        "使用哪个大模型？",
-        [
-            ("gemini",    "免费 · Google Gemini 2.0 Flash · 每天 1500 次请求"),
-            ("anthropic", "付费 · Anthropic Claude · 质量更高，Sonnet 约 ¥0.36/天"),
-        ],
-    )
+    # ── 2. DeepSeek ───────────────────────────────────────────────────────────
+    section("DeepSeek API")
+    print(dim("  申请 API Key：https://platform.deepseek.com/api_keys"))
+    api_key = ask("粘贴你的 DEEPSEEK_API_KEY", secret=True)
+    default_model = ask("模型名称", default="deepseek-v4-flash")
 
-    if provider == "gemini":
-        community_key = _fetch_community_gemini_key()
-        if community_key:
-            print(dim("\n  直接回车使用社区共享 Key（免费额度共享，可能限流）"))
-            print(dim("  或自行申请：https://aistudio.google.com/apikey"))
-            raw = getpass.getpass(f"  GEMINI_API_KEY [{dim('使用共享 Key')}]: ").strip()
-            api_key = raw if raw else community_key
-        else:
-            print(dim("\n  申请免费 Gemini API Key：https://aistudio.google.com/apikey"))
-            api_key = ask("粘贴你的 GEMINI_API_KEY", secret=True)
-        secret_name = "GEMINI_API_KEY"
-        default_model = "gemini-2.0-flash"
-    else:
-        print(dim("\n  申请 Anthropic API Key：https://console.anthropic.com"))
-        api_key = ask("粘贴你的 ANTHROPIC_API_KEY", secret=True)
-        secret_name = "ANTHROPIC_API_KEY"
-        default_model = "claude-sonnet-4-6"
-
-    # ── 3. Gmail ──────────────────────────────────────────────────────────────
-    section("Gmail 配置")
-    print(dim("  需要 Gmail 应用密码（非登录密码）："))
-    print(dim("  myaccount.google.com/security → 两步验证 → App Passwords"))
-    gmail_user = ask("Gmail 地址")
-    gmail_pass = ask("应用密码（16位，无空格）", secret=True)
-    recipient  = ask("收件邮箱", default=gmail_user)
+    # ── 3. Lark ─────────────────────────────────────────────────────────────
+    section("Lark 配置")
+    print(dim("  在飞书开放平台创建应用：https://open.feishu.cn/app"))
+    print(dim("  需开通 im:message 权限，receive_id 为接收人的 union_id"))
+    lark_app_id = ask("LARK_APP_ID")
+    lark_secret = ask("LARK_SECRET", secret=True)
+    lark_union_id = ask("LARK_RECEIVER（接收人 union_id）")
 
     # ── 4. 发送时间 ───────────────────────────────────────────────────────────
     section("发送时间")
@@ -174,10 +145,10 @@ def main():
     # ── 6. 写入 GitHub Secrets ────────────────────────────────────────────────
     section("写入 GitHub Secrets")
     secrets = {
-        secret_name:        api_key,
-        "GMAIL_USER":        gmail_user,
-        "GMAIL_APP_PASSWORD": gmail_pass,
-        "RECIPIENT_EMAIL":   recipient,
+        "DEEPSEEK_API_KEY": api_key,
+        "LARK_APP_ID": lark_app_id,
+        "LARK_SECRET": lark_secret,
+        "LARK_RECEIVER": lark_union_id,
     }
     all_ok = True
     for name, value in secrets.items():
@@ -195,8 +166,6 @@ def main():
     config_path = Path(__file__).parent / "config.yml"
     raw = config_path.read_text(encoding="utf-8")
 
-    # provider
-    raw = re.sub(r"^(provider:\s*)\S+", f"\\g<1>{provider}", raw, flags=re.MULTILINE)
     # send_hour_utc
     raw = re.sub(r"^(send_hour_utc:\s*)\d+", f"\\g<1>{send_hour}", raw, flags=re.MULTILINE)
     # model
@@ -205,7 +174,7 @@ def main():
     raw = re.sub(r"^(\s+output_language:\s*)\S+", f"\\g<1>{lang}", raw, flags=re.MULTILINE)
 
     config_path.write_text(raw, encoding="utf-8")
-    ok(f"provider={provider}, model={default_model}, send_hour_utc={send_hour}, language={lang}")
+    ok(f"model={default_model}, send_hour_utc={send_hour}, language={lang}")
 
     # ── 8. Commit & Push ──────────────────────────────────────────────────────
     section("提交配置")
@@ -239,7 +208,7 @@ def main():
     2. 手动发送今天的简报测试效果：
        {bold('Actions → AI Dispatch → Run workflow')}
 
-  每天 UTC {send_hour}:00 左右会自动发送到 {recipient}。
+  每天 UTC {send_hour}:00 左右会自动推送到 Lark。
 """)
 
 
