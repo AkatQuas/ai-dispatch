@@ -6,12 +6,13 @@ from pathlib import Path
 
 import feedparser
 import yaml
-
 from llm import DEFAULT_MODEL, complete
 from send_lark_message import lark_configured, send_lark_digest
 
 HISTORY_PATH = Path(__file__).parent / "sent_history.json"
+REPORT_DIR = Path(__file__).parent / "report"
 HISTORY_MAX = 1000  # 最多保留最近 1000 条，防止文件无限增长
+REPORT_HISTORY_COUNT = 3  # 生成简报时参考最近几期，避免重复新闻
 
 
 def load_config() -> dict:
@@ -38,6 +39,32 @@ def save_history(history: dict, new_url: str | None) -> None:
         json.dumps({"urls": updated, "last_sent_date": today}, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+
+
+def load_recent_reports(count: int = REPORT_HISTORY_COUNT) -> list[tuple[str, str]]:
+    """Load the latest saved reports (date, content), excluding today."""
+    if not REPORT_DIR.exists():
+        return []
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    reports: list[tuple[str, str]] = []
+    for path in sorted(REPORT_DIR.glob("*.md"), reverse=True):
+        date = path.stem
+        if date == today or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+            continue
+        reports.append((date, path.read_text(encoding="utf-8")))
+        if len(reports) >= count:
+            break
+    return reports
+
+
+def save_report(summary: str) -> Path:
+    """Save today's digest to report/YYYY-MM-DD.md."""
+    REPORT_DIR.mkdir(exist_ok=True)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    path = REPORT_DIR / f"{today}.md"
+    path.write_text(summary, encoding="utf-8")
+    return path
 
 
 def extract_recommended_url(md: str) -> str | None:
@@ -124,7 +151,12 @@ def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
     return unsent
 
 
-def summarize(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> str:
+def summarize(
+    articles: list[dict],
+    blog_candidates: list[dict],
+    cfg: dict,
+    recent_reports: list[tuple[str, str]] | None = None,
+) -> str:
     d = cfg["digest"]
     model = d.get("model", DEFAULT_MODEL)
 
@@ -142,11 +174,24 @@ def summarize(articles: list[dict], blog_candidates: list[dict], cfg: dict) -> s
 
     today = datetime.now().strftime("%Y年%m月%d日")
 
+    if recent_reports:
+        history_blocks = "\n\n---\n\n".join(
+            f"【{date}】\n{content}" for date, content in recent_reports
+        )
+        history_section = f"""
+【近几日简报回顾】以下是最近 {len(recent_reports)} 期的简报，请避免重复收录已覆盖的新闻（除非有重要新进展）：
+
+{history_blocks}
+
+"""
+    else:
+        history_section = ""
+
     prompt = f"""你是 AI Dispatch 的主编，为顶级机构的同行撰写每日深度简报。
 读者是熟悉该领域的专业人士，不需要解释基础概念，需要的是洞察和判断。
 用户重点关注的方向：{topics_str}。
 所有输出请使用{lang}。
-
+{history_section}
 【新闻资讯】过去 {d['news_hours']} 小时，共 {len(articles)} 条：
 
 {articles_text}
@@ -243,9 +288,17 @@ if __name__ == "__main__":
         print("No content found, skipping.")
         sys.exit(0)
 
+    recent_reports = load_recent_reports()
+    if recent_reports:
+        dates = ", ".join(date for date, _ in recent_reports)
+        print(f"Loaded {len(recent_reports)} recent report(s) for dedup: {dates}")
+
     model = cfg["digest"].get("model", DEFAULT_MODEL)
     print(f"Summarizing with DeepSeek ({model})...")
-    summary = summarize(articles, blog_candidates, cfg)
+    summary = summarize(articles, blog_candidates, cfg, recent_reports)
+
+    report_path = save_report(summary)
+    print(f"Saved report to {report_path}")
 
     print("Sending Lark message...")
     if not send_lark_digest(summary):
