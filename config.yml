@@ -1,12 +1,6 @@
-# ╔══════════════════════════════════════════════════════════════╗
-#  AI Dispatch — 配置文件
-#  Fork 后只需修改这一个文件，推送到 GitHub 即可生效
-#  完整说明：README.md
-# ╚══════════════════════════════════════════════════════════════╝
-
 # ──────────────────────────────────────────────
-#  STEP 1 · 告诉 Claude 你关注什么领域
-#  这些主题会直接影响 Claude 的分析角度和重点
+#  STEP 1 · 告诉大模型你关注什么领域
+#  这些主题会直接影响大模型的分析角度和重点
 # ──────────────────────────────────────────────
 topics:
   - AI and Agents
@@ -25,6 +19,7 @@ news_feeds:
   # arxiv cs.AI: https://rss.arxiv.org/rss/cs.AI
   # arxiv cs.RO: https://rss.arxiv.org/rss/cs.RO
   # arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
+  Baoyu: https://s.baoyu.io/feed.xml
   Ben's Bites: https://www.bensbites.com/feed
   Google DeepMind: https://deepmind.google/discover/blog/rss.xml
   Google AI Research: https://ai.googleblog.com/feeds/posts/default
@@ -37,6 +32,7 @@ news_feeds:
   NVIDIA AI Blog: https://blogs.nvidia.com/blog/category/ai/feed/
   One Useful Thing (Ethan Mollick): https://www.oneusefulthing.org/feed
   OpenAI Blog: https://openai.com/blog/rss.xml
+  Radarai: https://radarai.top/feed.xml
   Simon Willison: https://simonwillison.net/atom/everything/
   TechCrunch AI: https://techcrunch.com/category/artificial-intelligence/feed/
   The Verge AI: https://www.theverge.com/ai-artificial-intelligence/rss/index.xml
