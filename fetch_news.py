@@ -267,7 +267,8 @@ Markdown 格式模板：
 if __name__ == "__main__":
     if not lark_configured():
         print(
-            "[ERROR] Lark not configured. Set LARK_APP_ID, LARK_SECRET, LARK_RECEIVER.",
+            "[ERROR] Lark not configured. Set LARK_APP_ID, LARK_SECRET, "
+            "LARK_RECEIVER, LARK_FOLDER_TOKEN.",
             file=sys.stderr,
         )
         sys.exit(1)

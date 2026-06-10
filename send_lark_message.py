@@ -23,6 +23,7 @@ def lark_configured() -> bool:
         os.getenv("LARK_APP_ID")
         and os.getenv("LARK_SECRET")
         and os.getenv("LARK_RECEIVER")
+        and os.getenv("LARK_FOLDER_TOKEN")
     )
 
 
@@ -159,29 +160,24 @@ def html_to_lark_md(html: str) -> str:
 
 
 def send_lark_digest(md_body: str) -> bool:
-    """Send the daily digest as a Lark interactive card."""
+    """Create a Lark docx with the digest and send a bot message with the doc link."""
+    from lark_notify import send_report_as_doc
+
     if not lark_configured():
         print(
-            "[INFO] Lark not configured (LARK_APP_ID / LARK_SECRET / LARK_RECEIVER), skipping."
+            "[INFO] Lark not configured "
+            "(LARK_APP_ID / LARK_SECRET / LARK_RECEIVER / LARK_FOLDER_TOKEN), skipping."
         )
         return False
 
-    today = datetime.now().strftime("%m/%d")
+    today = datetime.now().strftime("%m%d")
     title_match = re.search(r"^##\s+(.+)$", md_body, re.MULTILINE)
-    card_title = title_match.group(1).strip() if title_match else f"AI Dispatch · {today}"
-
-    body_md = md_body.strip()
-    if len(body_md) > LARK_CONTENT_MAX:
-        body_md = body_md[: LARK_CONTENT_MAX - 20] + "\n\n…(truncated)"
-
-    card = build_interactive_card(
-        title=card_title,
-        fields=[{"is_short": False, "content": body_md}],
-        template="wathet",
+    doc_title = (
+        title_match.group(1).strip() if title_match else f"{today} - AI Dispatch"
     )
 
-    return send_message(
-        receive_id=os.environ["LARK_RECEIVER"],
-        content=card,
-        msg_type="interactive",
+    return send_report_as_doc(
+        title=doc_title,
+        markdown=md_body.strip(),
+        summary=f"📰 {doc_title}",
     )

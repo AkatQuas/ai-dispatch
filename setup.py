@@ -117,9 +117,11 @@ def main():
     # ── 3. Lark ─────────────────────────────────────────────────────────────
     section("Lark 配置")
     print(dim("  在飞书开放平台创建应用：https://open.feishu.cn/app"))
-    print(dim("  需开通 im:message 权限，receive_id 为接收人的 union_id"))
+    print(dim("  需开通 im:message、docx:document 权限，receive_id 为接收人的 union_id"))
+    print(dim("  LARK_FOLDER_TOKEN 见 docs/lark-doc.md"))
     lark_app_id = ask("LARK_APP_ID")
     lark_secret = ask("LARK_SECRET", secret=True)
+    lark_folder_token = ask("LARK_FOLDER_TOKEN（云文档文件夹 token）")
     lark_union_id = ask("LARK_RECEIVER（接收人 union_id）")
 
     # ── 4. 发送时间 ───────────────────────────────────────────────────────────
@@ -148,6 +150,7 @@ def main():
         "DEEPSEEK_API_KEY": api_key,
         "LARK_APP_ID": lark_app_id,
         "LARK_SECRET": lark_secret,
+        "LARK_FOLDER_TOKEN": lark_folder_token,
         "LARK_RECEIVER": lark_union_id,
     }
     all_ok = True

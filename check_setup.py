@@ -8,9 +8,13 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
-
+from dotenv import load_dotenv
+from lark_notify import send_report_as_doc
 from llm import DEFAULT_MODEL, api_key_configured, ping
-from send_lark_message import build_interactive_card, lark_configured, send_message
+from send_lark_message import lark_configured
+
+ROOT = Path(__file__).parent
+load_dotenv(ROOT / ".env")
 
 OK = "✅"
 FAIL = "❌"
@@ -47,6 +51,7 @@ required_secrets = {
     "LARK_APP_ID": os.getenv("LARK_APP_ID"),
     "LARK_SECRET": os.getenv("LARK_SECRET"),
     "LARK_RECEIVER": os.getenv("LARK_RECEIVER"),
+    "LARK_FOLDER_TOKEN": os.getenv("LARK_FOLDER_TOKEN"),
 }
 for name, value in required_secrets.items():
     check(name, bool(value), "已设置" if value else "未找到，请在 Settings → Secrets 中添加")
@@ -87,27 +92,28 @@ else:
 section("Lark")
 all_ok = not errors
 if not lark_configured():
-    check("Lark 配置完整", False, "需设置 LARK_APP_ID、LARK_SECRET、LARK_RECEIVER")
+    check(
+        "Lark 配置完整",
+        False,
+        "需设置 LARK_APP_ID、LARK_SECRET、LARK_RECEIVER、LARK_FOLDER_TOKEN",
+    )
 else:
     check("Lark 配置完整", True)
     if all_ok and cfg:
         try:
             now = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
-            card = build_interactive_card(
-                title="✅ AI Dispatch — 配置验证成功",
-                fields=[
-                    {"is_short": False, "content": f"环境已就绪，每日简报将发送到 Lark。\n\n验证时间：{now}"},
-                    {"is_short": True, "content": f"**新闻来源**\n{len(cfg.get('news_feeds', {}))} 个"},
-                    {"is_short": True, "content": f"**博客订阅**\n{len(cfg.get('blog_feeds', {}))} 个"},
-                ],
-                template="green",
+            markdown = (
+                f"# AI Dispatch — 配置验证成功\n\n"
+                f"验证时间：{now}\n\n"
+                f"- 新闻来源：{len(cfg.get('news_feeds', {}))} 个\n"
+                f"- 博客订阅：{len(cfg.get('blog_feeds', {}))} 个\n"
             )
-            ok_send = send_message(
-                receive_id=os.environ["LARK_RECEIVER"],
-                content=card,
-                msg_type="interactive",
+            ok_send = send_report_as_doc(
+                title="配置验证",
+                markdown=markdown,
+                summary="✅ AI Dispatch — 配置验证成功",
             )
-            check("测试 Lark 消息已发送", ok_send)
+            check("测试 Lark 文档通知已发送", ok_send)
         except Exception as e:
             check("发送测试 Lark 消息", False, str(e))
     else:
