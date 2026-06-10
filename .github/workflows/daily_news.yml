@@ -52,6 +52,7 @@ jobs:
           LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
           LARK_SECRET: ${{ secrets.LARK_SECRET }}
           LARK_RECEIVER: ${{ secrets.LARK_RECEIVER }}
+          LARK_FOLDER_TOKEN: ${{ secrets.LARK_FOLDER_TOKEN }}
         run: uv run python fetch_news.py
 
       - name: Commit updated sent history

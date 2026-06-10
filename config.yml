@@ -21,6 +21,7 @@ news_feeds:
   # arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
   Baoyu: https://s.baoyu.io/feed.xml
   Ben's Bites: https://www.bensbites.com/feed
+  Andrej Karpathy RSS: https://karpathy.github.io/feed.xml
   Google DeepMind: https://deepmind.google/discover/blog/rss.xml
   Google AI Research: https://ai.googleblog.com/feeds/posts/default
   Hugging Face: https://huggingface.co/blog/feed.xml
@@ -33,6 +34,8 @@ news_feeds:
   One Useful Thing (Ethan Mollick): https://www.oneusefulthing.org/feed
   OpenAI Blog: https://openai.com/blog/rss.xml
   Radarai: https://radarai.top/feed.xml
+  Sebastian Raschka: https://sebastianraschka.com/rss_feed.xml
+  Sebastian Raschka (Ahead of AI): https://magazine.sebastianraschka.com/feed.xml
   Simon Willison: https://simonwillison.net/atom/everything/
   TechCrunch AI: https://techcrunch.com/category/artificial-intelligence/feed/
   The Verge AI: https://www.theverge.com/ai-artificial-intelligence/rss/index.xml
@@ -45,9 +48,7 @@ news_feeds:
 #  回溯 blog_days 天内的新文章，已推送过的自动跳过
 # ──────────────────────────────────────────────
 blog_feeds:
-  Ahead of AI (Sebastian Raschka): https://magazine.sebastianraschka.com/feed
   AI Snake Oil: https://aisnakeoil.substack.com/feed
-  Andrej Karpathy Blog: https://karpathy.ai/index.xml
   Field Guide to AI: https://fieldguidetoai.substack.com/feed
   Gary Marcus AI Review: https://garymarcus.substack.com/feed
   HackerNews AI专题: https://hnrss.org/newest?q=AI
