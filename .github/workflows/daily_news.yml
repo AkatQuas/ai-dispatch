@@ -2,7 +2,7 @@ name: AI Dispatch
 
 on:
   schedule:
-    - cron: '*/20 5-7 * * *' # 每 15 分钟触发（UTC 3-9 点窗口），3-5 UTC 低峰先热身，减少 6+ UTC 积压
+    - cron: '*/20 4-6 * * *' # 每 15 分钟触发（UTC 4-6 点窗口），4-6 UTC 低峰先热身，减少 6+ UTC 积压
   workflow_dispatch: # 允许手动触发测试（忽略时间检查，直接发送）
 
 permissions:
