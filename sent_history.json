@@ -1,19 +1,20 @@
 {
   "urls": [
-    "https://claude.com/blog/the-founders-playbook",
-    "https://www.artificialstudio.ai/blog/ai-design-report-2026",
-    "https://claude.com/blog/running-an-ai-native-engineering-org",
-    "https://www.interconnects.ai/p/welcome-to-the-agi-era-of-ai-governance",
-    "https://andrewtrask.substack.com/p/breaking-todays-frontier-ai-companies",
-    "https://rutgerbregman.substack.com/p/an-inconvenient-truth-about-ai",
-    "https://charitydotwtf.substack.com/p/make-ai-boring-again",
     "http://www.incompleteideas.net/IncIdeas/BitterLesson.html",
-    "https://nexusfoundation.ngo/why-local-ai",
     "https://www.interconnects.ai/p/banning-open-source-ai-would-be-a",
-    "https://www.interconnects.ai/p/glm-52-is-the-step-change-for-open",
+    "https://andrewtrask.substack.com/p/breaking-todays-frontier-ai-companies",
     "https://karpathy.medium.com/software-2-0-a64152b37c35",
+    "https://claude.com/blog/the-founders-playbook",
+    "https://nexusfoundation.ngo/why-local-ai",
+    "https://rutgerbregman.substack.com/p/an-inconvenient-truth-about-ai",
+    "https://www.artificialstudio.ai/blog/ai-design-report-2026",
+    "https://www.interconnects.ai/p/glm-52-is-the-step-change-for-open",
+    "https://lilianweng.github.io/posts/2026-06-24-scaling-laws/",
+    "https://charitydotwtf.substack.com/p/make-ai-boring-again",
+    "https://claude.com/blog/running-an-ai-native-engineering-org",
     "https://www.interconnects.ai/p/claude-fable-5-and-new-ai-safety",
+    "https://www.interconnects.ai/p/welcome-to-the-agi-era-of-ai-governance",
     "https://www.interconnects.ai/p/open-and-closed-models-are-on-different"
   ],
-  "last_sent_date": "2026-06-25"
+  "last_sent_date": "2026-06-26"
 }
