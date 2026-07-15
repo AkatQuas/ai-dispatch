@@ -1,0 +1,39 @@
+name: Archive Old Reports to Issues
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # 每周日 UTC 00:00
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Archive old reports to issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run python archive_reports.py
+
+      - name: Commit deletions
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git diff --staged --quiet || git commit -m "chore(archive): remove archived reports [skip ci]"
+          git push
