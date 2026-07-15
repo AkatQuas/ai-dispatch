@@ -224,7 +224,7 @@ def summarize(
 
 Markdown 格式模板：
 
-📡 AI Dispatch · {today}
+AI News {today}
 
 新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇 · 聚焦 {topics_str}
 
