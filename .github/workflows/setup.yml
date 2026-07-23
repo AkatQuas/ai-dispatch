@@ -82,7 +82,7 @@ jobs:
 
           echo ""
           echo "════════════════════════════════════════════════════"
-          echo "  ✅  config.yml updated and pushed"
+          echo "   config.yml updated and pushed"
           echo ""
           echo "  Next: add these 5 secrets in your repo"
           echo "  $SECRETS_URL"
@@ -105,5 +105,5 @@ jobs:
           echo "    → Recipient union_id (im:message permission required)"
           echo ""
           echo "  After adding secrets, run:"
-          echo "  Actions → ✅ Check Setup → Run workflow"
+          echo "  Actions → Check Setup → Run workflow"
           echo "════════════════════════════════════════════════════"

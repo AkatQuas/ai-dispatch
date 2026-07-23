@@ -36,5 +36,5 @@ def send_report_as_doc(
         return False
 
     intro = summary or title
-    text = f"{intro}\n\n📄 Read full digest: {doc_url}"
+    text = f"{intro}\n\nRead full digest: {doc_url}"
     return send_message(recipient, {"text": text}, msg_type="text")

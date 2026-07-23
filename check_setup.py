@@ -111,20 +111,20 @@ else:
             ok_send = send_report_as_doc(
                 title="配置验证",
                 markdown=markdown,
-                summary="✅ AI Dispatch — 配置验证成功",
+                summary="AI Dispatch — 配置验证成功",
             )
             check("测试 Lark 文档通知已发送", ok_send)
         except Exception as e:
             check("发送测试 Lark 消息", False, str(e))
     else:
-        print("  ⚠️  存在配置错误，跳过发送测试 Lark 消息")
+        print("    存在配置错误，跳过发送测试 Lark 消息")
 
 # ── 结果汇总 ─────────────────────────────────────
 print("\n" + "═" * 54)
 if not errors:
-    print("  🎉  所有检查通过！查收 Lark 测试消息后即可等待每日简报。")
+    print("   所有检查通过！查收 Lark 测试消息后即可等待每日简报。")
 else:
-    print(f"  ❌  {len(errors)} 项需要修复：")
+    print(f"   {len(errors)} 项需要修复：")
     for e in errors:
         print(f"       · {e}")
     print("\n  参考 README.md 完成配置后重新运行此检查。")

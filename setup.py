@@ -14,7 +14,6 @@ try:
     import yaml
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "pyyaml", "-q"])
-    import yaml
 
 # ── 颜色输出 ────────────────────────────────────────────────────────────────
 
@@ -71,7 +70,7 @@ def set_secret(repo: str, name: str, value: str) -> bool:
 
 def main():
     print()
-    print(bold("  🚀  AI Dispatch 配置向导"))
+    print(bold("   AI Dispatch 配置向导"))
     print(dim("  ─────────────────────────────────────────────"))
     print(dim("  回答以下问题，向导将自动完成全部配置。"))
     print(dim("  密码输入时不显示字符，直接回车接受 [默认值]。"))
@@ -206,7 +205,7 @@ def main():
   下一步（可选）：
 
     1. 在 GitHub Actions 手动触发一次验证：
-       {bold('Actions → ✅ Check Setup → Run workflow')}
+       {bold('Actions → Check Setup → Run workflow')}
 
     2. 手动发送今天的简报测试效果：
        {bold('Actions → AI Dispatch → Run workflow')}
