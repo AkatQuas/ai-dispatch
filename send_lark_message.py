@@ -179,5 +179,5 @@ def send_lark_digest(md_body: str) -> bool:
     return send_report_as_doc(
         title=doc_title,
         markdown=md_body.strip(),
-        summary=f"📰 {doc_title}",
+        summary=f"{doc_title}",
     )
