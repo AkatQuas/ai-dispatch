@@ -11,7 +11,7 @@ from send_lark_message import lark_configured, send_lark_digest
 
 HISTORY_PATH = Path(__file__).parent / "sent_history.json"
 REPORT_DIR = Path(__file__).parent / "report"
-HISTORY_MAX = 1000  # 最多保留最近 1000 条，防止文件无限增长
+HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
 REPORT_HISTORY_COUNT = 3  # 生成简报时参考最近几期，避免重复新闻
 
 
@@ -28,15 +28,15 @@ def load_history() -> dict:
 
 
 def save_history(history: dict, new_url: str | None) -> None:
-    urls = set(history.get("urls", []))
+    urls = history.get("urls", [])
     if new_url:
-        urls.add(new_url)
-    updated = list(urls)
-    if len(updated) > HISTORY_MAX:
-        updated = updated[-HISTORY_MAX:]
+        # 用 dict.fromkeys 保序去重（Python 3.7+ dict 有序）
+        urls = list(dict.fromkeys(urls + [new_url]))
+    if len(urls) > HISTORY_MAX:
+        urls = urls[-HISTORY_MAX:]  # 保留最新的 N 条
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     HISTORY_PATH.write_text(
-        json.dumps({"urls": updated, "last_sent_date": today}, indent=2, ensure_ascii=False),
+        json.dumps({"urls": urls, "last_sent_date": today}, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
 

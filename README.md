@@ -210,15 +210,17 @@ ai-dispatch/
 ├── send_lark_message.py    ← Lark bot messaging
 ├── llm.py                  ← DeepSeek API client
 ├── check_setup.py          ← Setup verification script
+├── issue_store.py          ← Persist state/reports via GitHub Issues
 ├── pyproject.toml          ← Dependencies (managed with uv)
 ├── uv.lock
 ├── requirements.txt        ← Legacy; CI uses uv.lock
-├── sent_history.json       ← Auto-maintained dedup log (do not edit manually)
 └── .github/workflows/
     ├── daily_news.yml      ← Daily cron job
     ├── setup.yml           ← First-time setup wizard (browser-based)
     └── check_setup.yml     ← One-click setup check
 ```
+
+Runtime files (`sent_history.json`, `report/*.md`) are gitignored. CI loads/saves them through Issues (`ai-dispatch-state`, `ai-dispatch-report`).
 
 ---
 
@@ -237,7 +239,7 @@ Edit `output_language` in `config.yml`. Default is `English` — change it to `�
 Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: https://rss-url`.
 
 **Q: Blog picks keep repeating?**
-`sent_history.json` tracks all previously sent URLs. To reset, clear the `urls` array in that file.
+Dedup state lives in the Issue labeled `ai-dispatch-state`. Clear the `urls` array in that Issue body (or locally in `sent_history.json` then run `python issue_store.py save`).
 
 ---
 
@@ -448,14 +450,16 @@ ai-dispatch/
 ├── fetch_news.py           ← 主程序
 ├── llm.py                  ← DeepSeek API 客户端
 ├── check_setup.py          ← 配置验证脚本
+├── issue_store.py          ← 通过 GitHub Issues 持久化状态与报告
 ├── pyproject.toml          ← 依赖（uv 管理）
 ├── uv.lock
 ├── requirements.txt
-├── sent_history.json       ← 已推送博客记录（自动维护，请勿手动编辑）
 └── .github/workflows/
     ├── daily_news.yml      ← 每日定时任务
     └── check_setup.yml     ← 一键验证配置
 ```
+
+运行时文件（`sent_history.json`、`report/*.md`）已 gitignore，由 Issues（`ai-dispatch-state` / `ai-dispatch-report`）持久化。
 
 ---
 
@@ -474,4 +478,4 @@ ai-dispatch/
 在 `config.yml` 的 `news_feeds` 或 `blog_feeds` 下新增一行：`名称: RSS链接`。
 
 **Q: 推荐博客一直重复？**
-`sent_history.json` 记录已推送内容，如需重置，清空该文件的 `urls` 数组即可。
+去重状态在 label 为 `ai-dispatch-state` 的 Issue 中。清空其中 `urls` 数组（或改本地 `sent_history.json` 后执行 `python issue_store.py save`）。

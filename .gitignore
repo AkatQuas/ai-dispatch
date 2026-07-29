@@ -17,6 +17,6 @@ env/
 .env
 *.env
 
-# sent_history is intentionally tracked so forks start with a clean state
-# Uncomment below if you prefer not to commit it:
-# sent_history.json
+# Runtime state & generated reports (persisted via GitHub Issues)
+sent_history.json
+report/*.md
