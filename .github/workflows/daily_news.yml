@@ -55,9 +55,10 @@ jobs:
             echo "should_send=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Fetch and send AI news
+      - name: Fetch, publish report, and send AI news
         if: steps.timecheck.outputs.should_send == 'true' || github.event_name == 'workflow_dispatch'
         env:
+          GH_TOKEN: ${{ github.token }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
           LARK_SECRET: ${{ secrets.LARK_SECRET }}
@@ -65,10 +66,8 @@ jobs:
           LARK_FOLDER_TOKEN: ${{ secrets.LARK_FOLDER_TOKEN }}
         run: uv run python fetch_news.py
 
-      - name: Persist state and publish report Issue
+      - name: Persist state
         if: steps.timecheck.outputs.should_send == 'true' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          uv run python issue_store.py save
-          uv run python issue_store.py publish-today
+        run: uv run python issue_store.py save

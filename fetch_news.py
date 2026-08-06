@@ -6,6 +6,7 @@ from pathlib import Path
 
 import feedparser
 import yaml
+from issue_store import publish_today_report
 from llm import DEFAULT_MODEL, complete
 from send_lark_message import lark_configured, send_lark_digest
 
@@ -303,6 +304,9 @@ if __name__ == "__main__":
 
     report_path = save_report(summary)
     print(f"Saved report to {report_path}")
+
+    print("Publishing report to GitHub Issue...")
+    publish_today_report()
 
     print("Sending Lark message...")
     if not send_lark_digest(summary):
