@@ -32,7 +32,7 @@ jobs:
       - name: Load state and recent reports from Issues
         env:
           GH_TOKEN: ${{ github.token }}
-        run: uv run python issue_store.py load
+        run: uv run ai-dispatch-issues load
 
       - name: Check send hour
         id: timecheck
@@ -64,10 +64,13 @@ jobs:
           LARK_SECRET: ${{ secrets.LARK_SECRET }}
           LARK_RECEIVER: ${{ secrets.LARK_RECEIVER }}
           LARK_FOLDER_TOKEN: ${{ secrets.LARK_FOLDER_TOKEN }}
-        run: uv run python fetch_news.py
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+        run: uv run ai-dispatch
 
       - name: Persist state
         if: steps.timecheck.outputs.should_send == 'true' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: uv run python issue_store.py save
+        run: uv run ai-dispatch-issues save

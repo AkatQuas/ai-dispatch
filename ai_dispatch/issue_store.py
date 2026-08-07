@@ -7,10 +7,10 @@ Labels:
   ai-dispatch-report  — one Issue per daily report
 
 Usage (CI):
-  python issue_store.py load          # state + recent reports → local files
-  python issue_store.py save          # local sent_history.json → state Issue
-  python issue_store.py publish-today # today's report/*.md → report Issue
-  python issue_store.py migrate       # publish all local report/*.md still missing
+  ai-dispatch-issues load          # state + recent reports → local files
+  ai-dispatch-issues save          # local sent_history.json → state Issue
+  ai-dispatch-issues publish-today # today's report/*.md → report Issue
+  ai-dispatch-issues migrate       # publish all local report/*.md still missing
 
 Outside Actions / without GH_TOKEN: load/save/publish no-op (local files only).
 """
@@ -24,12 +24,10 @@ import re
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).parent
-HISTORY_PATH = ROOT / "sent_history.json"
-REPORT_DIR = ROOT / "report"
+from ai_dispatch.paths import HISTORY_PATH, REPORT_DIR
 
 LABEL_STATE = "ai-dispatch-state"
 LABEL_REPORT = "ai-dispatch-report"
@@ -40,10 +38,11 @@ ISO_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
 
 def gh_available() -> bool:
-    if not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
-        # Local interactive auth still works for migrate; CI always has token.
-        if os.environ.get("GITHUB_ACTIONS") == "true":
-            return False
+    if (
+        not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN"))
+        and os.environ.get("GITHUB_ACTIONS") == "true"
+    ):
+        return False
     r = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
     return r.returncode == 0
 
@@ -66,10 +65,9 @@ def ensure_labels() -> None:
             ["label", "create", name, "--color", color, "--description", desc],
             check=False,
         )
-        if r.returncode != 0 and "already exists" not in (r.stderr + r.stdout).lower():
-            # Older gh may say "Label already exists"
-            if "exists" not in (r.stderr + r.stdout).lower():
-                print(f"  ⚠  label create {name}: {r.stderr.strip() or r.stdout.strip()}")
+        msg = (r.stderr + r.stdout).lower()
+        if r.returncode != 0 and "exists" not in msg:
+            print(f"  ⚠  label create {name}: {r.stderr.strip() or r.stdout.strip()}")
 
 
 def find_state_issue() -> int | None:
@@ -121,9 +119,7 @@ def format_state_body(history: dict) -> str:
     }
     return (
         "<!-- managed by issue_store.py — do not edit by hand -->\n"
-        "```json\n"
-        + json.dumps(payload, indent=2, ensure_ascii=False)
-        + "\n```\n"
+        "```json\n" + json.dumps(payload, indent=2, ensure_ascii=False) + "\n```\n"
     )
 
 
@@ -175,9 +171,7 @@ def save_state() -> None:
 
     body = format_state_body(history)
     number = find_state_issue()
-    with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", suffix=".md", delete=False
-    ) as tmp:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as tmp:
         tmp.write(body)
         tmp_path = tmp.name
 
@@ -233,6 +227,7 @@ def list_report_issues(limit: int = 50) -> list[dict]:
         ]
     )
     items = json.loads(r.stdout or "[]")
+
     # Prefer newer dates; fall back to createdAt
     def sort_key(it: dict) -> str:
         date = extract_date_from_issue(it.get("title") or "", it.get("body") or "")
@@ -300,9 +295,7 @@ def publish_report_file(filepath: Path) -> bool:
     body = f"<!-- ai-dispatch-date: {date} -->\n\n{raw}"
     title = get_issue_title_from_file(filepath)
 
-    with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", suffix=".md", delete=False
-    ) as tmp:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as tmp:
         tmp.write(body)
         tmp_path = tmp.name
     try:
@@ -332,7 +325,7 @@ def publish_today_report() -> None:
         print("[issue_store] gh unavailable; skip publish_today")
         return
     ensure_labels()
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     path = REPORT_DIR / f"{today}.md"
     if not path.exists():
         print(f"[issue_store] no report file for today ({path.name}); skip")

@@ -17,7 +17,7 @@ from lark_oapi.api.docx.v1 import (
 from lark_oapi.api.drive.v1 import CreatePermissionMemberRequest
 from lark_oapi.api.drive.v1.model.base_member import BaseMember
 
-from send_lark_message import get_client
+from ai_dispatch.send_lark_message import get_client
 
 DOC_TYPE = "docx"
 DEFAULT_DOMAIN = "feishu.cn"
@@ -38,12 +38,7 @@ def document_url(document_id: str) -> str:
 def create_document(title: str) -> tuple[str, int]:
     """Create an empty docx. Returns (document_id, revision_id)."""
     client = get_client()
-    body = (
-        CreateDocumentRequestBody.builder()
-        .title(title)
-        .folder_token(_folder_token())
-        .build()
-    )
+    body = CreateDocumentRequestBody.builder().title(title).folder_token(_folder_token()).build()
     request = CreateDocumentRequest.builder().request_body(body).build()
     response = client.docx.v1.document.create(request)
     if not response.success():

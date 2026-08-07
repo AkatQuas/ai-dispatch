@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
 [project]
 name = "ai-dispatch"
 version = "0.1.0"
@@ -10,11 +14,64 @@ dependencies = [
     "pyyaml>=6.0",
     "lark-oapi>=1.4.0",
     "python-dotenv>=1.2.2",
+    "langfuse>=3.0.0",
 ]
 
-[tool.uv]
-package = false
+[project.scripts]
+ai-dispatch = "ai_dispatch.fetch_news:main"
+ai-dispatch-issues = "ai_dispatch.issue_store:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ai_dispatch"]
 
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 default = true
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.1",
+    "ruff>=0.16.1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["ai_dispatch", "tests", "scripts"]
+extend-exclude = [
+    ".venv",
+    "report",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "W",
+    "UP",
+    "B",
+    "SIM",
+    "RET",
+    "PIE",
+    "RUF",
+]
+ignore = [
+    "E501",
+    "B008",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"setup.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ai_dispatch"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

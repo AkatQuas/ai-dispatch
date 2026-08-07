@@ -69,6 +69,14 @@ Add these **5 secrets** (the Setup workflow tells you exactly what to put in eac
 | `LARK_FOLDER_TOKEN` | Cloud folder token for doc storage (see [docs/lark-doc.md](docs/lark-doc.md))         |
 | `LARK_RECEIVER`     | Recipient `union_id` (app needs `im:message` permission)                              |
 
+Optional — [Langfuse](https://langfuse.com) LLM observability (see [LLM Observability](#llm-observability-langfuse)):
+
+| Secret                 | Value                                                        |
+| ---------------------- | ------------------------------------------------------------ |
+| `LANGFUSE_PUBLIC_KEY`  | Project public key (`pk-lf-...`) from Langfuse               |
+| `LANGFUSE_SECRET_KEY`  | Project secret key (`sk-lf-...`)                             |
+| `LANGFUSE_BASE_URL`    | Region host, e.g. `https://cloud.langfuse.com` or `https://jp.cloud.langfuse.com` |
+
 ---
 
 ### Step 4 — Verify
@@ -108,9 +116,23 @@ Once all green, AI Dispatch runs automatically every day. The default send time 
 ## Prefer the command line?
 
 <details>
-<summary>Set up locally with the interactive wizard (requires Git, Python 3.10+, and GitHub CLI).</summary>
+<summary>Set up locally with the interactive wizard (requires Git, [uv](https://docs.astral.sh/uv/), and GitHub CLI).</summary>
 
-### Step 0 — Install Git and GitHub CLI
+### Step 0 — Install Git, uv, and GitHub CLI
+
+#### Install uv
+
+```bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+```powershell
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+> **Windows:** Reopen your terminal after installation so `uv` is on your PATH.
 
 #### Install Git
 
@@ -200,24 +222,103 @@ Change the model in `config.yml` under `digest.model`, or pass it in the **⚙�
 
 ---
 
+## Local development
+
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`). CI installs with `uv sync --frozen`.
+
+```bash
+cd ai-dispatch
+uv sync                              # create .venv and install locked deps
+uv sync --group dev                  # include ruff + pre-commit
+uv run python setup.py               # interactive first-time setup
+uv run python -m unittest tests.test_llm -v
+uv run python check_setup.py             # full setup check (needs .env secrets)
+```
+
+**Lint & format ([Ruff](https://docs.astral.sh/ruff/)):**
+
+```bash
+uv run ruff check .                  # lint
+uv run ruff check --fix .            # auto-fix
+uv run ruff format .                 # format
+uv run ruff format --check .         # CI: format check only
+```
+
+**Git pre-commit (recommended):**
+
+```bash
+uv sync --group dev
+uv run pre-commit install            # once per machine
+uv run pre-commit run --all-files    # manual full run
+```
+
+Each commit runs: trailing whitespace / EOF, YAML checks, Ruff lint (`--fix`) and format. See [`.pre-commit-config.yaml`](./.pre-commit-config.yaml). CI mirrors this in **Lint & Format** workflow.
+
+VS Code/Cursor: install the [Ruff extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff); [`.vscode/settings.json`](./.vscode/settings.json) enables format-on-save.
+
+**CLI entry points:**
+
+| Command | Description |
+| ------- | ----------- |
+| `uv run ai-dispatch` | Fetch, summarize, and send daily digest |
+| `uv run python check_setup.py` | Verify secrets, API, and Lark |
+| `uv run ai-dispatch-issues` | Manage GitHub Issue state (`load` / `save` / …) |
+
+---
+
+## LLM Observability (Langfuse)
+
+[Langfuse](https://langfuse.com) is integrated as **optional** observability for every DeepSeek call. It is a practical way to see what the digest pipeline actually did — not just whether it succeeded.
+
+When both `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are set, each run records:
+
+- **Traces** for `complete()` and `ping()` — prompt in, model output out
+- **Nested generations** when a thinking model needs multiple rounds to finish
+- **Model, tokens, and cost** per call — useful for comparing models and spotting regressions
+- **Tags** (`ai-dispatch`) for filtering in the Langfuse UI
+
+If either key is missing, tracing is a **no-op**: no extra network calls, no behavior change.
+
+**Enable locally** — add to `.env` (see [`.env.example`](./.env.example)):
+
+```bash
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com   # or https://jp.cloud.langfuse.com, etc.
+```
+
+**Enable in CI** — add the same three names as GitHub Actions secrets. The setup wizard (`uv run python setup.py`) can write them for you. Workflows already pass them through to LLM steps.
+
+Create a free project at [langfuse.com/cloud](https://langfuse.com/cloud) → **Settings → API Keys**.
+
+---
+
 ## File Structure
 
 ```
 ai-dispatch/
 ├── config.yml              ← Your personalization (the only file to edit)
 ├── setup.py                ← Interactive setup wizard
-├── fetch_news.py           ← Main pipeline
-├── lark_doc.py             ← Lark cloud doc create + markdown write
-├── lark_notify.py          ← Doc report + bot link notification
-├── send_lark_message.py    ← Lark bot messaging
-├── llm.py                  ← DeepSeek API client
-├── check_setup.py          ← Setup verification script
-├── issue_store.py          ← Persist state/reports via GitHub Issues
+├── check_setup.py          ← Setup verification (helper)
+├── ai_dispatch/            ← Application library (single package layer)
+│   ├── fetch_news.py       ← Main pipeline
+│   ├── issue_store.py      ← Persist state/reports via GitHub Issues
+│   ├── llm.py              ← DeepSeek API client
+│   ├── langfuse_tracing.py ← Optional Langfuse tracing
+│   ├── lark_doc.py         ← Lark cloud doc create + markdown write
+│   ├── lark_notify.py      ← Doc report + bot link notification
+│   ├── send_lark_message.py← Lark bot messaging
+│   └── paths.py            ← Project root paths
+├── tests/
+│   └── test_llm.py
+├── scripts/
+│   └── smoke_test.py       ← pre-commit / CI smoke test
+├── .pre-commit-config.yaml
 ├── pyproject.toml          ← Dependencies (managed with uv)
 ├── uv.lock
-├── requirements.txt        ← Legacy; CI uses uv.lock
 └── .github/workflows/
     ├── daily_news.yml      ← Daily cron job
+    ├── lint.yml            ← Ruff lint / format / smoke test
     ├── setup.yml           ← First-time setup wizard (browser-based)
     └── check_setup.yml     ← One-click setup check
 ```
@@ -241,7 +342,7 @@ Edit `output_language` in `config.yml`. Default is `English` — change it to `�
 Add a line under `news_feeds` or `blog_feeds` in `config.yml`: `Source Name: https://rss-url`.
 
 **Q: Blog picks keep repeating?**
-Dedup state lives in the Issue labeled `ai-dispatch-state`. Clear the `urls` array in that Issue body (or locally in `sent_history.json` then run `python issue_store.py save`).
+Dedup state lives in the Issue labeled `ai-dispatch-state`. Clear the `urls` array in that Issue body (or locally in `sent_history.json` then run `uv run ai-dispatch-issues save`).
 
 ---
 

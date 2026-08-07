@@ -28,7 +28,7 @@
 
   <!-- Setup wizard box -->
   <rect x="172" y="54" width="120" height="52" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
-  <text x="232" y="76" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">python3 setup.py</text>
+  <text x="232" y="76" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">uv run setup.py</text>
   <text x="232" y="92" text-anchor="middle" fill="#c7d2fe" font-size="10">2 min · guided</text>
 
   <!-- down arrow -->

@@ -161,7 +161,7 @@ def html_to_lark_md(html: str) -> str:
 
 def send_lark_digest(md_body: str) -> bool:
     """Create a Lark docx with the digest and send a bot message with the doc link."""
-    from lark_notify import send_report_as_doc
+    from ai_dispatch.lark_notify import send_report_as_doc
 
     if not lark_configured():
         print(
@@ -172,9 +172,7 @@ def send_lark_digest(md_body: str) -> bool:
 
     today = datetime.now().strftime("%m%d")
     title_match = re.search(r"^##\s+(.+)$", md_body, re.MULTILINE)
-    doc_title = (
-        title_match.group(1).strip() if title_match else f"{today} - AI Dispatch"
-    )
+    doc_title = title_match.group(1).strip() if title_match else f"{today} - AI Dispatch"
 
     return send_report_as_doc(
         title=doc_title,

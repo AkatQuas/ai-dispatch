@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import os
 
-from lark_doc import create_doc_with_markdown
-from send_lark_message import lark_configured, send_message
+from ai_dispatch.lark_doc import create_doc_with_markdown
+from ai_dispatch.send_lark_message import lark_configured, send_message
 
 
 def send_report_as_doc(

@@ -1,24 +1,23 @@
 import json
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import feedparser
 import yaml
-from issue_store import publish_today_report
-from llm import DEFAULT_MODEL, complete
-from send_lark_message import lark_configured, send_lark_digest
 
-HISTORY_PATH = Path(__file__).parent / "sent_history.json"
-REPORT_DIR = Path(__file__).parent / "report"
+from ai_dispatch.issue_store import publish_today_report
+from ai_dispatch.llm import DEFAULT_MODEL, complete
+from ai_dispatch.paths import CONFIG_PATH, HISTORY_PATH, REPORT_DIR
+from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
+
 HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
 REPORT_HISTORY_COUNT = 3  # 生成简报时参考最近几期，避免重复新闻
 
 
 def load_config() -> dict:
-    path = Path(__file__).parent / "config.yml"
-    with open(path, encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -32,10 +31,10 @@ def save_history(history: dict, new_url: str | None) -> None:
     urls = history.get("urls", [])
     if new_url:
         # 用 dict.fromkeys 保序去重（Python 3.7+ dict 有序）
-        urls = list(dict.fromkeys(urls + [new_url]))
+        urls = list(dict.fromkeys([*urls, new_url]))
     if len(urls) > HISTORY_MAX:
         urls = urls[-HISTORY_MAX:]  # 保留最新的 N 条
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     HISTORY_PATH.write_text(
         json.dumps({"urls": urls, "last_sent_date": today}, indent=2, ensure_ascii=False),
         encoding="utf-8",
@@ -47,7 +46,7 @@ def load_recent_reports(count: int = REPORT_HISTORY_COUNT) -> list[tuple[str, st
     if not REPORT_DIR.exists():
         return []
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     reports: list[tuple[str, str]] = []
     for path in sorted(REPORT_DIR.glob("*.md"), reverse=True):
         date = path.stem
@@ -62,7 +61,7 @@ def load_recent_reports(count: int = REPORT_HISTORY_COUNT) -> list[tuple[str, st
 def save_report(summary: str) -> Path:
     """Save today's digest to report/YYYY-MM-DD.md."""
     REPORT_DIR.mkdir(exist_ok=True)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     path = REPORT_DIR / f"{today}.md"
     path.write_text(summary, encoding="utf-8")
     return path
@@ -78,9 +77,8 @@ def extract_recommended_url(md: str) -> str | None:
     return match.group(1) if match else None
 
 
-def _fetch_feeds(feeds: dict, hours: int, per_source: int,
-                 arxiv_keywords: list[str]) -> list[dict]:
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+def _fetch_feeds(feeds: dict, hours: int, per_source: int, arxiv_keywords: list[str]) -> list[dict]:
+    cutoff = datetime.now(UTC) - timedelta(hours=hours)
     articles = []
 
     for source, url in feeds.items():
@@ -91,7 +89,7 @@ def _fetch_feeds(feeds: dict, hours: int, per_source: int,
                 for attr in ("published_parsed", "updated_parsed"):
                     t = getattr(entry, attr, None)
                     if t:
-                        published = datetime(*t[:6], tzinfo=timezone.utc)
+                        published = datetime(*t[:6], tzinfo=UTC)
                         break
 
                 if published and published < cutoff:
@@ -104,13 +102,17 @@ def _fetch_feeds(feeds: dict, hours: int, per_source: int,
                 if source.startswith("arxiv") and not any(kw in text for kw in arxiv_keywords):
                     continue
 
-                articles.append({
-                    "source": source,
-                    "title": title,
-                    "url": entry.get("link", ""),
-                    "summary": summary[:1000] if summary else "",
-                    "published": published.strftime("%Y-%m-%d %H:%M UTC") if published else "Unknown",
-                })
+                articles.append(
+                    {
+                        "source": source,
+                        "title": title,
+                        "url": entry.get("link", ""),
+                        "summary": summary[:1000] if summary else "",
+                        "published": published.strftime("%Y-%m-%d %H:%M UTC")
+                        if published
+                        else "Unknown",
+                    }
+                )
         except Exception as e:
             print(f"[WARN] {source}: {e}", file=sys.stderr)
 
@@ -147,9 +149,7 @@ def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
     ]
 
     # 合并后过滤历史
-    all_candidates = rss_blogs + classics
-    unsent = [a for a in all_candidates if a["url"] not in history]
-    return unsent
+    return [a for a in rss_blogs + classics if a["url"] not in history]
 
 
 def summarize(
@@ -168,10 +168,14 @@ def summarize(
         f"[{a['source']}] ({a['published']})\n标题: {a['title']}\n链接: {a['url']}\n摘要: {a['summary']}"
         for a in articles
     )
-    blogs_text = "\n\n---\n\n".join(
-        f"[{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n简介: {b['summary']}"
-        for b in blog_candidates
-    ) if blog_candidates else "（暂无候选，所有文章均已推送过）"
+    blogs_text = (
+        "\n\n---\n\n".join(
+            f"[{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n简介: {b['summary']}"
+            for b in blog_candidates
+        )
+        if blog_candidates
+        else "（暂无候选，所有文章均已推送过）"
+    )
 
     today = datetime.now().strftime("%Y年%m月%d日")
 
@@ -196,7 +200,7 @@ def summarize(
 【重要规则】任何引用今日或近几日回归的内容（新闻、博客、论文、数据、动态）的地方，一律附上原始链接。没有来源链接的判断或引用不应出现。飞书文档支持 markdown 语法，使用 `[标题](链接)` 的格式。
 
 {history_section}
-【新闻资讯】过去 {d['news_hours']} 小时，共 {len(articles)} 条：
+【新闻资讯】过去 {d["news_hours"]} 小时，共 {len(articles)} 条：
 
 {articles_text}
 
@@ -268,7 +272,7 @@ AI News {today}
     return complete(prompt, model=model, max_tokens=d["max_tokens"])
 
 
-if __name__ == "__main__":
+def main() -> None:
     if not lark_configured():
         print(
             "[ERROR] Lark not configured. Set LARK_APP_ID, LARK_SECRET, "
@@ -321,3 +325,7 @@ if __name__ == "__main__":
     save_history(history, recommended_url)
 
     print("Done!")
+
+
+if __name__ == "__main__":
+    main()

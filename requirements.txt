@@ -1,4 +1,0 @@
-feedparser==6.0.11
-openai>=1.0.0
-pyyaml>=6.0
-lark-oapi>=1.4.0

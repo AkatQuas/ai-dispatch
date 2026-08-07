@@ -67,6 +67,14 @@ workflow 运行完成后会自动更新 `config.yml`，并在日志中打印需�
 | `LARK_FOLDER_TOKEN` | 云文档文件夹 token（见 [docs/lark-doc.md](docs/lark-doc.md)）                    |
 | `LARK_RECEIVER`     | 接收人 `union_id`（应用需 `im:message` 权限）                                    |
 
+可选 — [Langfuse](https://langfuse.com) LLM 可观测性（见 [LLM 可观测性](#llm-可观测性langfuse)）：
+
+| Secret 名称            | 填写内容                                                         |
+| ---------------------- | ---------------------------------------------------------------- |
+| `LANGFUSE_PUBLIC_KEY`  | Langfuse 项目公钥（`pk-lf-...`）                                 |
+| `LANGFUSE_SECRET_KEY`  | Langfuse 项目私钥（`sk-lf-...`）                                 |
+| `LANGFUSE_BASE_URL`    | 区域地址，如 `https://cloud.langfuse.com` 或 `https://jp.cloud.langfuse.com` |
+
 ---
 
 ### 第四步：验证配置
@@ -106,9 +114,23 @@ workflow 运行完成后会自动更新 `config.yml`，并在日志中打印需�
 ## 偏好命令行？
 
 <details>
-<summary>使用本地交互向导配置（需要 Git、Python 3.10+ 和 GitHub CLI）。</summary>
+<summary>使用本地交互向导配置（需要 Git、[uv](https://docs.astral.sh/uv/) 和 GitHub CLI）。</summary>
 
-### 第零步：安装 Git 和 GitHub CLI
+### 第零步：安装 Git、uv 和 GitHub CLI
+
+#### 安装 uv
+
+```bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+```powershell
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+> **Windows 注意：** 安装后**关闭终端重新打开**，`uv` 才能被识别。
 
 #### 安装 Git
 
@@ -196,24 +218,103 @@ GitHub Actions 完全免费。唯一成本是每次日报的 DeepSeek API 调用
 
 ---
 
+## 本地开发
+
+依赖由 [uv](https://docs.astral.sh/uv/) 管理（`pyproject.toml` + `uv.lock`）。CI 使用 `uv sync --frozen` 安装。
+
+```bash
+cd ai-dispatch
+uv sync                              # 创建 .venv 并安装锁定依赖
+uv sync --group dev                  # 含 ruff + pre-commit
+uv run python setup.py               # 交互式首次配置
+uv run python -m unittest tests.test_llm -v
+uv run python check_setup.py             # 完整配置检查（需要 .env 中的密钥）
+```
+
+**代码检查与格式化（[Ruff](https://docs.astral.sh/ruff/)）：**
+
+```bash
+uv run ruff check .                  # 静态检查
+uv run ruff check --fix .            # 自动修复
+uv run ruff format .                 # 格式化
+uv run ruff format --check .         # CI：仅检查格式
+```
+
+**Git pre-commit（推荐）：**
+
+```bash
+uv sync --group dev
+uv run pre-commit install            # 每台机器执行一次
+uv run pre-commit run --all-files    # 手动全量跑一遍
+```
+
+每次 `git commit` 会自动执行：尾随空格/EOF、YAML 检查、Ruff lint（含 `--fix`）与 format。配置见 [`.pre-commit-config.yaml`](./.pre-commit-config.yaml)。CI 在 **Lint & Format** workflow 中对齐相同检查。
+
+VS Code/Cursor：安装 [Ruff 扩展](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)；[`.vscode/settings.json`](./.vscode/settings.json) 已配置保存时格式化。
+
+**CLI 入口：**
+
+| 命令 | 说明 |
+| ---- | ---- |
+| `uv run ai-dispatch` | 抓取、汇总并发送每日简报 |
+| `uv run python check_setup.py` | 验证密钥、API 与 Lark |
+| `uv run ai-dispatch-issues` | 管理 GitHub Issue 状态（`load` / `save` / …） |
+
+---
+
+## LLM 可观测性（Langfuse）
+
+本项目集成了 [Langfuse](https://langfuse.com) 作为 **可选** 的 LLM 观测层。对每日简报这种「黑盒」调用来说，Langfuse 能帮你回答：模型收到了什么、回了什么、花了多少 token、多轮推理卡在哪一轮。
+
+当 `LANGFUSE_PUBLIC_KEY` 与 `LANGFUSE_SECRET_KEY` 同时配置时，会自动记录：
+
+- **`complete()` / `ping()` 的 trace** — 输入 prompt、输出正文
+- **多轮 generation 嵌套** — thinking 模型需要续写时，每轮单独可见
+- **模型名、token、费用** — 便于对比 `deepseek-v4-flash` / `pro` 或排查异常消耗
+- **标签** `ai-dispatch` — 在 Langfuse 控制台按项目筛选
+
+任一 key 未设置则 **完全跳过上报**，不影响正常运行。
+
+**本地启用** — 写入 `.env`（参考 [`.env.example`](./.env.example)）：
+
+```bash
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com   # 或 https://jp.cloud.langfuse.com 等
+```
+
+**CI 启用** — 在 GitHub Actions Secrets 中配置同名变量；`uv run python setup.py` 向导也会询问是否写入。Workflow 已把变量传给 LLM 相关步骤。
+
+在 [langfuse.com/cloud](https://langfuse.com/cloud) 免费注册项目 → **Settings → API Keys** 获取密钥。
+
+---
+
 ## 文件说明
 
 ```
 ai-dispatch/
 ├── config.yml              ← 你的个性化配置（唯一需要编辑的文件）
 ├── setup.py                ← 交互式配置向导
-├── fetch_news.py           ← 主程序
-├── lark_doc.py             ← 飞书云文档创建 + markdown 写入
-├── lark_notify.py          ← 文档报告 + 机器人链接通知
-├── send_lark_message.py    ← 飞书机器人消息发送
-├── llm.py                  ← DeepSeek API 客户端
-├── check_setup.py          ← 配置验证脚本
-├── issue_store.py          ← 通过 GitHub Issues 持久化状态与报告
+├── check_setup.py          ← 配置验证（辅助脚本）
+├── ai_dispatch/            ← 应用库（单层 package）
+│   ├── fetch_news.py       ← 主程序
+│   ├── issue_store.py      ← 通过 GitHub Issues 持久化状态与报告
+│   ├── llm.py              ← DeepSeek API 客户端
+│   ├── langfuse_tracing.py ← 可选 Langfuse 追踪
+│   ├── lark_doc.py         ← 飞书云文档创建 + markdown 写入
+│   ├── lark_notify.py      ← 文档报告 + 机器人链接通知
+│   ├── send_lark_message.py← 飞书机器人消息发送
+│   └── paths.py            ← 项目根路径
+├── tests/
+│   └── test_llm.py
+├── scripts/
+│   └── smoke_test.py       ← pre-commit / CI 冒烟测试
+├── .pre-commit-config.yaml
 ├── pyproject.toml          ← 依赖（uv 管理）
 ├── uv.lock
-├── requirements.txt
 └── .github/workflows/
     ├── daily_news.yml      ← 每日定时任务
+    ├── lint.yml            ← Ruff 检查 / 格式化 / 冒烟测试
     ├── setup.yml           ← 首次配置向导（浏览器版）
     └── check_setup.yml     ← 一键验证配置
 ```
@@ -237,4 +338,4 @@ ai-dispatch/
 在 `config.yml` 的 `news_feeds` 或 `blog_feeds` 下新增一行：`名称: RSS链接`。
 
 **Q: 推荐博客一直重复？**
-去重状态在 label 为 `ai-dispatch-state` 的 Issue 中。清空其中 `urls` 数组（或改本地 `sent_history.json` 后执行 `python issue_store.py save`）。
+去重状态在 label 为 `ai-dispatch-state` 的 Issue 中。清空其中 `urls` 数组（或改本地 `sent_history.json` 后执行 `uv run ai-dispatch-issues save`）。
