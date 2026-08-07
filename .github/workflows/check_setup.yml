@@ -1,4 +1,4 @@
-name: ✅ Check Setup
+name: Check Setup
 
 on:
   workflow_dispatch: # 只能手动触发，用于首次验证配置

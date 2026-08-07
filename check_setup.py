@@ -36,6 +36,44 @@ def section(title: str) -> None:
     print(f"\n── {title} {'─' * (50 - len(title))}")
 
 
+def _mask_secret(value: str, *, visible: int = 10) -> str:
+    if len(value) <= visible:
+        return value
+    return f"{value[:visible]}…"
+
+
+def report_langfuse() -> None:
+    public = os.getenv("LANGFUSE_PUBLIC_KEY")
+    secret = os.getenv("LANGFUSE_SECRET_KEY")
+    base_url = os.getenv("LANGFUSE_BASE_URL")
+
+    if not any((public, secret, base_url)):
+        print("  ⚪  Langfuse 未配置（可选，LLM 可观测性）")
+        return
+
+    if public:
+        print(f"  ✅  LANGFUSE_PUBLIC_KEY  ({public})")
+    else:
+        print("  ⚪  LANGFUSE_PUBLIC_KEY  (未设置)")
+
+    if secret:
+        print(f"  ✅  LANGFUSE_SECRET_KEY  ({_mask_secret(secret)})")
+    else:
+        print("  ⚪  LANGFUSE_SECRET_KEY  (未设置)")
+
+    if base_url:
+        print(f"  ✅  LANGFUSE_BASE_URL  ({base_url})")
+    else:
+        print("  ⚪  LANGFUSE_BASE_URL  (未设置，使用 Langfuse SDK 默认)")
+
+    from ai_dispatch.langfuse_tracing import is_enabled
+
+    if is_enabled():
+        print("  ✅  Langfuse 追踪已启用")
+    else:
+        print("  ⚠️  Langfuse 密钥不完整，追踪未启用（需同时设置 PUBLIC_KEY 与 SECRET_KEY）")
+
+
 def main() -> int:
     load_dotenv(ENV_PATH)
     errors: list[str] = []
@@ -101,6 +139,9 @@ def main() -> int:
             check(errors, "API 连接", False, str(e))
     else:
         check(errors, "API 连接（跳过，DEEPSEEK_API_KEY 未设置）", False)
+
+    section("Langfuse（可选）")
+    report_langfuse()
 
     section("Lark")
     all_ok = not errors

@@ -103,7 +103,6 @@ def complete(prompt: str, *, model: str, max_tokens: int) -> str:
             model=model,
             messages=messages,
             max_tokens=max_tokens,
-            name="deepseek-chat-completion",
             metadata={"round": round_idx + 1},
         )
         message = response.choices[0].message
@@ -125,7 +124,6 @@ def complete(prompt: str, *, model: str, max_tokens: int) -> str:
     return _extract_content(last_message)
 
 
-@observe(name="deepseek-ping", capture_output=False)
 def ping(*, model: str = DEFAULT_MODEL) -> None:
     """Lightweight connectivity check — only verifies the API accepts a request."""
     set_trace_input([{"role": "user", "content": "ping"}])
@@ -135,7 +133,6 @@ def ping(*, model: str = DEFAULT_MODEL) -> None:
         model=model,
         messages=[{"role": "user", "content": "ping"}],
         max_tokens=16,
-        name="deepseek-ping",
     )
     if not response.choices:
         raise RuntimeError("DeepSeek returned no choices")
