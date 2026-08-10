@@ -3,11 +3,6 @@ name: ⚙️ Setup
 on:
   workflow_dispatch:
     inputs:
-      send_hour_utc:
-        description: 'Send time — UTC hour 0-23  (Beijing 08:00 → 0 | London BST 07:00 → 6 | New York 07:00 → 11)'
-        required: true
-        default: '6'
-        type: string
       output_language:
         description: 'Digest output language'
         required: true
@@ -39,16 +34,8 @@ jobs:
           python3 - <<'EOF'
           import re, sys
 
-          hour      = "${{ inputs.send_hour_utc }}".strip()
           language  = "${{ inputs.output_language }}"
           model     = "${{ inputs.model }}".strip()
-
-          try:
-              hour_int = int(hour)
-              assert 0 <= hour_int <= 23
-          except (ValueError, AssertionError):
-              print(f"ERROR: send_hour_utc must be 0-23, got '{hour}'")
-              sys.exit(1)
 
           if not model:
               print("ERROR: model must not be empty")
@@ -57,14 +44,13 @@ jobs:
           with open("config.yml", encoding="utf-8") as f:
               content = f.read()
 
-          content = re.sub(r"^send_hour_utc:\s*\d+",  f"send_hour_utc: {hour_int}", content, flags=re.MULTILINE)
           content = re.sub(r"^(\s+model:\s*)\S+",     rf"\g<1>{model}",          content, flags=re.MULTILINE)
           content = re.sub(r"^(\s+output_language:\s*)\S+", rf"\g<1>{language}", content, flags=re.MULTILINE)
 
           with open("config.yml", "w", encoding="utf-8") as f:
               f.write(content)
 
-          print(f"✓ model={model}  send_hour_utc={hour_int}  language={language}")
+          print(f"✓ model={model}  language={language}")
           EOF
 
       - name: Commit and push
@@ -103,6 +89,8 @@ jobs:
           echo ""
           echo "  LARK_RECEIVER"
           echo "    → Recipient union_id (im:message permission required)"
+          echo ""
+          echo "  To change send time, edit cron in .github/workflows/daily_news.yml"
           echo ""
           echo "  After adding secrets, run:"
           echo "  Actions → Check Setup → Run workflow"

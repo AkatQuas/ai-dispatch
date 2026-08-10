@@ -181,16 +181,6 @@ def main():
     lark_folder_token = ask("LARK_FOLDER_TOKEN（云文档文件夹 token）")
     lark_union_id = ask("LARK_RECEIVER（接收人 union_id）")
 
-    # ── 发送时间 ───────────────────────────────────────────────────────────
-    section("发送时间")
-    print(dim("  GitHub Actions 使用 UTC 时间。常用参考："))
-    print(dim("  北京时间 08:00 = UTC 0 │ 伦敦 BST 07:00 = UTC 4 │ 纽约 07:00 = UTC 11"))
-    send_hour_raw = ask("期望触发时间（UTC 小时，0-23）", default="4")
-    try:
-        send_hour = int(send_hour_raw) % 24
-    except ValueError:
-        send_hour = 4
-
     # ── 输出语言 ───────────────────────────────────────────────────────────
     section("简报语言")
     lang = ask_choice(
@@ -230,15 +220,13 @@ def main():
     config_path = Path(__file__).parent / "config.yml"
     raw = config_path.read_text(encoding="utf-8")
 
-    # send_hour_utc
-    raw = re.sub(r"^(send_hour_utc:\s*)\d+", f"\\g<1>{send_hour}", raw, flags=re.MULTILINE)
     # model
     raw = re.sub(r"^(\s+model:\s*)\S+", f"\\g<1>{default_model}", raw, flags=re.MULTILINE)
     # output_language
     raw = re.sub(r"^(\s+output_language:\s*)\S+", f"\\g<1>{lang}", raw, flags=re.MULTILINE)
 
     config_path.write_text(raw, encoding="utf-8")
-    ok(f"model={default_model}, send_hour_utc={send_hour}, language={lang}")
+    ok(f"model={default_model}, language={lang}")
 
     # ── Commit & Push ──────────────────────────────────────────────────────
     section("提交配置")
@@ -272,7 +260,7 @@ def main():
     2. 手动发送今天的简报测试效果：
        {bold("Actions → AI Dispatch → Run workflow")}
 
-  每天 UTC {send_hour}:00 左右会自动推送到 Lark。
+  每天会自动推送到 Lark（发送时间见 .github/workflows/daily_news.yml 中的 cron）。
 """)
 
 

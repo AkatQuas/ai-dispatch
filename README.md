@@ -45,11 +45,10 @@ Click **Fork** in the top right → create it under your own account.
 
 Go to **Actions → ⚙️ Setup → Run workflow** and fill in the form:
 
-| Field           | What to enter                                                                  |
-| --------------- | ------------------------------------------------------------------------------ |
-| Send time (UTC) | hour 0–23 — Beijing 08:00 → `0`, London BST 07:00 → `6`, New York 07:00 → `11` |
-| DeepSeek model  | `deepseek-v4-flash` (default), `deepseek-v4-pro`, etc.                         |
-| Output language | `English` or `中文`                                                            |
+| Field           | What to enter                          |
+| --------------- | -------------------------------------- |
+| DeepSeek model  | `deepseek-v4-flash` (default), `deepseek-v4-pro`, etc. |
+| Output language | `English` or `中文`                    |
 
 The workflow updates `config.yml` and prints a checklist of the secrets you need to add next.
 
@@ -109,7 +108,7 @@ Go to **Actions → ✅ Check Setup → Run workflow**
 ══════════════════════════════════════════════════════
 ```
 
-Once all green, AI Dispatch runs automatically every day. The default send time targets **07:00 BST / 07:00 GMT** — change it via `send_hour_utc` in `config.yml`.
+Once all green, AI Dispatch runs automatically every day. The default schedule is **UTC 6:00** (~07:00 BST) — change it in `.github/workflows/daily_news.yml`.
 
 ---
 
