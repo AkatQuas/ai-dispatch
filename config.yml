@@ -143,5 +143,7 @@ digest:
   news_per_source: 50 # 每个新闻源最多抓取条数
   blog_per_source: 20 # 每个博客最多抓取条数
   model: deepseek-v4-flash # deepseek-v4-flash | deepseek-v4-pro
-  max_tokens: 10000
+  reasoning_effort: low # low | high | max（v4-flash 的 low 为真 low；v4-pro 的 low 会映射为 high）
+  max_tokens: 16000
+  report_history_max_chars: 2000 # 往期简报摘要上限（仅传标题+信号，不传全文）
   output_language: 中文 # 摘要输出语言，可改为 中文

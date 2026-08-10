@@ -269,6 +269,7 @@ VS Code/Cursor：安装 [Ruff 扩展](https://marketplace.visualstudio.com/items
 
 - **`complete()` / `ping()` 的 trace** — 输入 prompt、输出正文
 - **多轮 generation 嵌套** — thinking 模型需要续写时，每轮单独可见
+- **分层 trace 结构** — `summarize-digest` → `deepseek-complete` → `deepseek-round-N-{initial|reasoning|truncation}` → `deepseek-generation-N-*`
 - **模型名、token、费用** — 便于对比 `deepseek-v4-flash` / `pro` 或排查异常消耗
 - **标签** `ai-dispatch` — 在 Langfuse 控制台按项目筛选
 

@@ -8,12 +8,19 @@ import feedparser
 import yaml
 
 from ai_dispatch.issue_store import publish_today_report
+from ai_dispatch.langfuse_tracing import APP_TAG, observe, set_trace_metadata
 from ai_dispatch.llm import DEFAULT_MODEL, complete
 from ai_dispatch.paths import CONFIG_PATH, HISTORY_PATH, REPORT_DIR
 from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
 
 HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
 REPORT_HISTORY_COUNT = 3  # 生成简报时参考最近几期，避免重复新闻
+DIGEST_SECTION_MARKERS = (
+    "★ 趋势分析",
+    "★ 值得深挖",
+    "★ 今日推荐博客",
+    "**今日信号：**",
+)
 
 
 def load_config() -> dict:
@@ -75,6 +82,34 @@ def extract_recommended_url(md: str) -> str | None:
         re.DOTALL,
     )
     return match.group(1) if match else None
+
+
+def summarize_report_for_dedup(content: str, max_chars: int = 2000) -> str:
+    """Compress a past report into titles + signal for lightweight dedup context."""
+    lines: list[str] = []
+
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped:
+            lines.append(stripped)
+            break
+
+    for match in re.finditer(r"^☆\s+\[([^\]]+)\]\([^)]+\)", content, re.MULTILINE):
+        lines.append(f"- {match.group(1)}")
+
+    signal = re.search(r"\*\*今日信号：\*\*(.+)$", content, re.MULTILINE)
+    if signal:
+        lines.append(f"今日信号: {signal.group(1).strip()}")
+
+    summary = "\n".join(lines)
+    if len(summary) > max_chars:
+        summary = summary[: max_chars - 1] + "…"
+    return summary
+
+
+def is_digest_complete(md: str) -> bool:
+    """True when all five digest sections are present."""
+    return all(marker in md for marker in DIGEST_SECTION_MARKERS)
 
 
 def _fetch_feeds(feeds: dict, hours: int, per_source: int, arxiv_keywords: list[str]) -> list[dict]:
@@ -152,6 +187,7 @@ def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
     return [a for a in rss_blogs + classics if a["url"] not in history]
 
 
+@observe(name="summarize-digest", capture_input=False)
 def summarize(
     articles: list[dict],
     blog_candidates: list[dict],
@@ -160,6 +196,13 @@ def summarize(
 ) -> str:
     d = cfg["digest"]
     model = d.get("model", DEFAULT_MODEL)
+    set_trace_metadata(
+        model=model,
+        news_count=len(articles),
+        blog_count=len(blog_candidates),
+        recent_report_count=len(recent_reports or []),
+        langfuse_tags=[APP_TAG],
+    )
 
     topics_str = "、".join(cfg["topics"])
     lang = d.get("output_language", "中文")
@@ -180,11 +223,13 @@ def summarize(
     today = datetime.now().strftime("%Y年%m月%d日")
 
     if recent_reports:
+        max_chars = d.get("report_history_max_chars", 2000)
         history_blocks = "\n\n---\n\n".join(
-            f"【{date}】\n{content}" for date, content in recent_reports
+            f"【{date}】（已覆盖标题摘要）\n{summarize_report_for_dedup(content, max_chars)}"
+            for date, content in recent_reports
         )
         history_section = f"""
-【近几日简报回顾】以下是最近 {len(recent_reports)} 期的简报，请避免重复收录已覆盖的新闻（除非有重要新进展）：
+【近几日简报回顾】以下是最近 {len(recent_reports)} 期已覆盖内容的标题摘要，请避免重复收录（除非有重要新进展）：
 
 {history_blocks}
 
@@ -269,7 +314,13 @@ AI News {today}
 
 **今日信号：**……"""
 
-    return complete(prompt, model=model, max_tokens=d["max_tokens"])
+    return complete(
+        prompt,
+        model=model,
+        max_tokens=d["max_tokens"],
+        reasoning_effort=d.get("reasoning_effort", "low"),
+        is_complete=is_digest_complete,
+    )
 
 
 def main() -> None:

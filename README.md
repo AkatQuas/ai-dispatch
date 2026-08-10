@@ -273,6 +273,7 @@ When both `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are set, each run reco
 
 - **Traces** for `complete()` and `ping()` — prompt in, model output out
 - **Nested generations** when a thinking model needs multiple rounds to finish
+- **Layered trace hierarchy** — `summarize-digest` → `deepseek-complete` → `deepseek-round-N-{initial|reasoning|truncation}` → `deepseek-generation-N-*`
 - **Model, tokens, and cost** per call — useful for comparing models and spotting regressions
 - **Tags** (`ai-dispatch`) for filtering in the Langfuse UI
 

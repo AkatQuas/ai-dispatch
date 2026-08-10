@@ -5,10 +5,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from ai_dispatch.llm import (
-    CONTINUATION_PROMPT,
     MAX_COMPLETION_ROUNDS,
+    REASONING_CONTINUATION_PROMPT,
+    TRUNCATION_CONTINUATION_PROMPT,
     _extract_content,
-    _should_continue,
+    _should_continue_reasoning,
     _try_extract_content,
     complete,
 )
@@ -19,6 +20,10 @@ def _message(*, content: str | None = None, reasoning: str | None = None):
     return SimpleNamespace(content=content, model_extra=extra, tool_calls=None)
 
 
+def _response(message, *, finish_reason: str = "stop"):
+    return SimpleNamespace(choices=[SimpleNamespace(message=message, finish_reason=finish_reason)])
+
+
 class ExtractContentTests(unittest.TestCase):
     def test_prefers_content_over_reasoning(self):
         msg = _message(content="final", reasoning="thinking")
@@ -27,7 +32,7 @@ class ExtractContentTests(unittest.TestCase):
     def test_reasoning_only_returns_none(self):
         msg = _message(content=None, reasoning="thinking")
         self.assertIsNone(_try_extract_content(msg))
-        self.assertTrue(_should_continue(msg))
+        self.assertTrue(_should_continue_reasoning(msg))
 
     def test_empty_raises(self):
         with self.assertRaisesRegex(RuntimeError, "empty content"):
@@ -36,12 +41,23 @@ class ExtractContentTests(unittest.TestCase):
 
 class CompleteTests(unittest.TestCase):
     @patch("ai_dispatch.llm.get_client")
+    def test_passes_reasoning_effort_low(self, get_client):
+        client = MagicMock()
+        get_client.return_value = client
+        client.chat.completions.create.return_value = _response(_message(content="digest"))
+
+        complete("prompt", model="deepseek-v4-flash", max_tokens=100, reasoning_effort="low")
+
+        kwargs = client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["reasoning_effort"], "low")
+        self.assertEqual(kwargs["name"], "deepseek-generation-1-initial")
+        self.assertEqual(kwargs["extra_body"], {"thinking": {"type": "enabled"}})
+
+    @patch("ai_dispatch.llm.get_client")
     def test_returns_content_on_first_round(self, get_client):
         client = MagicMock()
         get_client.return_value = client
-        client.chat.completions.create.return_value = SimpleNamespace(
-            choices=[SimpleNamespace(message=_message(content="digest"))]
-        )
+        client.chat.completions.create.return_value = _response(_message(content="digest"))
 
         result = complete("prompt", model="deepseek-v4-flash", max_tokens=100)
 
@@ -53,8 +69,8 @@ class CompleteTests(unittest.TestCase):
         client = MagicMock()
         get_client.return_value = client
         client.chat.completions.create.side_effect = [
-            SimpleNamespace(choices=[SimpleNamespace(message=_message(reasoning="step 1"))]),
-            SimpleNamespace(choices=[SimpleNamespace(message=_message(content="digest"))]),
+            _response(_message(reasoning="step 1")),
+            _response(_message(content="digest")),
         ]
 
         result = complete("prompt", model="deepseek-v4-flash", max_tokens=100)
@@ -63,20 +79,55 @@ class CompleteTests(unittest.TestCase):
         self.assertEqual(client.chat.completions.create.call_count, 2)
         second_messages = client.chat.completions.create.call_args_list[1].kwargs["messages"]
         self.assertEqual(len(second_messages), 3)
-        self.assertEqual(second_messages[2]["content"], CONTINUATION_PROMPT)
+        self.assertEqual(second_messages[2]["content"], REASONING_CONTINUATION_PROMPT)
 
     @patch("ai_dispatch.llm.get_client")
     def test_raises_after_max_rounds_of_reasoning_only(self, get_client):
         client = MagicMock()
         get_client.return_value = client
-        client.chat.completions.create.return_value = SimpleNamespace(
-            choices=[SimpleNamespace(message=_message(reasoning="still thinking"))]
+        client.chat.completions.create.return_value = _response(
+            _message(reasoning="still thinking")
         )
 
         with self.assertRaisesRegex(RuntimeError, f"{MAX_COMPLETION_ROUNDS} round"):
             complete("prompt", model="deepseek-v4-flash", max_tokens=100)
 
         self.assertEqual(client.chat.completions.create.call_count, MAX_COMPLETION_ROUNDS)
+
+    @patch("ai_dispatch.llm.get_client")
+    def test_continues_when_finish_reason_length(self, get_client):
+        client = MagicMock()
+        get_client.return_value = client
+        client.chat.completions.create.side_effect = [
+            _response(_message(content="part one"), finish_reason="length"),
+            _response(_message(content="part two"), finish_reason="stop"),
+        ]
+
+        result = complete("prompt", model="deepseek-v4-flash", max_tokens=100)
+
+        self.assertEqual(result, "part onepart two")
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+        second_messages = client.chat.completions.create.call_args_list[1].kwargs["messages"]
+        self.assertEqual(second_messages[2]["content"], TRUNCATION_CONTINUATION_PROMPT)
+
+    @patch("ai_dispatch.llm.get_client")
+    def test_continues_when_is_complete_reports_missing_sections(self, get_client):
+        client = MagicMock()
+        get_client.return_value = client
+        client.chat.completions.create.side_effect = [
+            _response(_message(content="partial")),
+            _response(_message(content=" **今日信号：**done")),
+        ]
+
+        result = complete(
+            "prompt",
+            model="deepseek-v4-flash",
+            max_tokens=100,
+            is_complete=lambda md: "**今日信号：**" in md,
+        )
+
+        self.assertEqual(result, "partial**今日信号：**done")
+        self.assertEqual(client.chat.completions.create.call_count, 2)
 
 
 if __name__ == "__main__":
