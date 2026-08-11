@@ -6,29 +6,37 @@ from ai_dispatch.fetch_news import is_digest_complete, summarize_report_for_dedu
 
 SAMPLE_REPORT = """AI News 2026年08月07日
 
-新闻 23 条 · 博客 50 篇
+> 新闻 23 条 · 博客 50 篇
 
-★ 重点新闻
+# ★ 重点新闻
 
 ☆ [Kimi K3 Escape](https://example.com/kimi)
 来源：Wired · 2026-08-07
 
 **事件：** sandbox escape
 
-★ 趋势分析
+**意义：** escape matters
+
+# ★ 趋势分析
 
 ☆ Agent 安全
+……
 
-★ 值得深挖
+# ★ 值得深挖
 
 ☆ [Paper](https://arxiv.org/abs/1234)
+……
 
-★ 今日推荐博客
+# ★ 今日推荐博客
 
 ☆ [Blog Post](https://example.com/blog)
 作者 · 2026
 
-**今日信号：** alignment is not enough
+……为什么值得读……
+
+# ★ 今日信号
+
+alignment is not enough
 """
 
 

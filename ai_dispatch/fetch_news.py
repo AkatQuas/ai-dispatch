@@ -8,7 +8,7 @@ import feedparser
 import yaml
 
 from ai_dispatch.issue_store import publish_today_report
-from ai_dispatch.langfuse_tracing import APP_TAG, observe, set_trace_metadata
+from ai_dispatch.langfuse_tracing import observe
 from ai_dispatch.llm import DEFAULT_MODEL, complete
 from ai_dispatch.paths import CONFIG_PATH, HISTORY_PATH, REPORT_DIR
 from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
@@ -16,10 +16,11 @@ from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
 HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
 REPORT_HISTORY_COUNT = 3  # 生成简报时参考最近几期，避免重复新闻
 DIGEST_SECTION_MARKERS = (
-    "★ 趋势分析",
-    "★ 值得深挖",
-    "★ 今日推荐博客",
-    "**今日信号：**",
+    "# ★ 重点新闻",
+    "# ★ 趋势分析",
+    "# ★ 值得深挖",
+    "# ★ 今日推荐博客",
+    "# ★ 今日信号",
 )
 
 
@@ -97,9 +98,15 @@ def summarize_report_for_dedup(content: str, max_chars: int = 2000) -> str:
     for match in re.finditer(r"^☆\s+\[([^\]]+)\]\([^)]+\)", content, re.MULTILINE):
         lines.append(f"- {match.group(1)}")
 
-    signal = re.search(r"\*\*今日信号：\*\*(.+)$", content, re.MULTILINE)
+    signal = re.search(
+        r"^#\s*★\s*今日信号\s*\n+(.+?)(?=\n#\s|\Z)",
+        content,
+        re.MULTILINE | re.DOTALL,
+    )
     if signal:
-        lines.append(f"今日信号: {signal.group(1).strip()}")
+        signal_text = " ".join(signal.group(1).split())
+        if signal_text:
+            lines.append(f"今日信号: {signal_text}")
 
     summary = "\n".join(lines)
     if len(summary) > max_chars:
@@ -108,7 +115,7 @@ def summarize_report_for_dedup(content: str, max_chars: int = 2000) -> str:
 
 
 def is_digest_complete(md: str) -> bool:
-    """True when all five digest sections are present."""
+    """True when all digest sections are present."""
     return all(marker in md for marker in DIGEST_SECTION_MARKERS)
 
 
@@ -196,13 +203,6 @@ def summarize(
 ) -> str:
     d = cfg["digest"]
     model = d.get("model", DEFAULT_MODEL)
-    set_trace_metadata(
-        model=model,
-        news_count=len(articles),
-        blog_count=len(blog_candidates),
-        recent_report_count=len(recent_reports or []),
-        langfuse_tags=[APP_TAG],
-    )
 
     topics_str = "、".join(cfg["topics"])
     lang = d.get("output_language", "中文")
@@ -276,9 +276,9 @@ Markdown 格式模板：
 
 AI News {today}
 
-新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇
+> 新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇
 
-★ 重点新闻
+# ★ 重点新闻
 
 ☆ [标题](URL)
 来源：XXX · 时间
@@ -289,17 +289,17 @@ AI News {today}
 
 关联：……
 
-★ 趋势分析
+# ★ 趋势分析
 
 ☆ 趋势名称
 ……
 
-★ 值得深挖
+# ★ 值得深挖
 
 ☆ [论文/报告标题](URL)
 ……
 
-★ 今日推荐博客
+# ★ 今日推荐博客
 
 ☆ [文章标题](URL)
 作者/来源 · 时间
@@ -312,7 +312,9 @@ AI News {today}
 
 适合：…… · 阅读时间：约 XX 分钟
 
-**今日信号：**……"""
+# ★ 今日信号
+
+……"""
 
     return complete(
         prompt,
@@ -320,6 +322,11 @@ AI News {today}
         max_tokens=d["max_tokens"],
         reasoning_effort=d.get("reasoning_effort", "low"),
         is_complete=is_digest_complete,
+        trace_metadata={
+            "news_count": len(articles),
+            "blog_count": len(blog_candidates),
+            "recent_report_count": len(recent_reports or []),
+        },
     )
 
 
