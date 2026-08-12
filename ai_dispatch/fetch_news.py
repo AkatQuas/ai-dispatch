@@ -16,11 +16,11 @@ from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
 HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
 REPORT_HISTORY_COUNT = 3  # 生成简报时参考最近几期，避免重复新闻
 DIGEST_SECTION_MARKERS = (
-    "# ★ 重点新闻",
-    "# ★ 趋势分析",
-    "# ★ 值得深挖",
-    "# ★ 今日推荐博客",
-    "# ★ 今日信号",
+    "## ★ 重点新闻",
+    "## ★ 趋势分析",
+    "## ★ 值得深挖",
+    "## ★ 今日推荐博客",
+    "## ★ 今日信号",
 )
 
 
@@ -92,14 +92,14 @@ def summarize_report_for_dedup(content: str, max_chars: int = 2000) -> str:
     for line in content.splitlines():
         stripped = line.strip()
         if stripped:
-            lines.append(stripped)
+            lines.append(re.sub(r"^#+\s*", "", stripped))
             break
 
     for match in re.finditer(r"^☆\s+\[([^\]]+)\]\([^)]+\)", content, re.MULTILINE):
         lines.append(f"- {match.group(1)}")
 
     signal = re.search(
-        r"^#\s*★\s*今日信号\s*\n+(.+?)(?=\n#\s|\Z)",
+        r"^##\s*★\s*今日信号\s*\n+(.+?)(?=\n##\s|\Z)",
         content,
         re.MULTILINE | re.DOTALL,
     )
@@ -274,11 +274,11 @@ def summarize(
 
 Markdown 格式模板：
 
-AI News {today}
+# AI News {today}
 
 > 新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇
 
-# ★ 重点新闻
+## ★ 重点新闻
 
 ☆ [标题](URL)
 来源：XXX · 时间
@@ -289,17 +289,17 @@ AI News {today}
 
 关联：……
 
-# ★ 趋势分析
+## ★ 趋势分析
 
 ☆ 趋势名称
 ……
 
-# ★ 值得深挖
+## ★ 值得深挖
 
 ☆ [论文/报告标题](URL)
 ……
 
-# ★ 今日推荐博客
+## ★ 今日推荐博客
 
 ☆ [文章标题](URL)
 作者/来源 · 时间
@@ -312,7 +312,7 @@ AI News {today}
 
 适合：…… · 阅读时间：约 XX 分钟
 
-# ★ 今日信号
+## ★ 今日信号
 
 ……"""
 

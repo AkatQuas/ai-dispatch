@@ -171,7 +171,8 @@ def send_lark_digest(md_body: str) -> bool:
         return False
 
     today = datetime.now().strftime("%m%d")
-    title_match = re.search(r"^##\s+(.+)$", md_body, re.MULTILINE)
+    # Prefer H1 (`# AI News …`); do not use `## ★ …` section headings.
+    title_match = re.search(r"^#\s+(.+)$", md_body, re.MULTILINE)
     doc_title = title_match.group(1).strip() if title_match else f"{today} - AI Dispatch"
 
     return send_report_as_doc(
