@@ -272,8 +272,9 @@ def summarize(
 第五部分：今日信号
 最关键的一个判断，不超过 60 字。
 
-Markdown 格式模板：
+以下为输出格式示例（仅作参考，你的正文不要包含代码块围栏）：
 
+```markdown
 # AI News {today}
 
 > 新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇
@@ -314,7 +315,8 @@ Markdown 格式模板：
 
 ## ★ 今日信号
 
-……"""
+……
+```"""
 
     return complete(
         prompt,
