@@ -138,6 +138,7 @@ arxiv_keywords:
   - reasoning
 
 digest:
+  save_raw_materials_doc: true # 送 LLM 总结前，将新闻+博客/经典原文单独存为飞书文档（默认开启）
   news_hours: 24 # 新闻回溯窗口（小时）
   blog_days: 90 # 博客 RSS 回溯窗口（天）
   news_per_source: 50 # 每个新闻源最多抓取条数

@@ -2,7 +2,12 @@
 
 import unittest
 
-from ai_dispatch.fetch_news import is_digest_complete, summarize_report_for_dedup
+from ai_dispatch.fetch_news import (
+    format_raw_materials_markdown,
+    is_digest_complete,
+    save_raw_materials_enabled,
+    summarize_report_for_dedup,
+)
 
 SAMPLE_REPORT = """# AI News 2026年08月07日
 
@@ -58,6 +63,39 @@ class ReportSummaryTests(unittest.TestCase):
     def test_is_digest_complete(self):
         self.assertTrue(is_digest_complete(SAMPLE_REPORT))
         self.assertFalse(is_digest_complete("★ 重点新闻\nonly news"))
+
+    def test_format_raw_materials_markdown(self):
+        articles = [
+            {
+                "source": "Test News",
+                "title": "Headline",
+                "url": "https://example.com/news",
+                "summary": "news summary",
+                "published": "2026-08-07 10:00 UTC",
+            }
+        ]
+        blogs = [
+            {
+                "source": "Blog · Author",
+                "title": "Blog Post",
+                "url": "https://example.com/blog",
+                "summary": "blog note",
+                "published": "2026-08-01",
+            }
+        ]
+        cfg = {"digest": {"news_hours": 24}}
+        md = format_raw_materials_markdown(articles, blogs, cfg)
+        self.assertIn("## 新闻资讯", md)
+        self.assertIn("## 博客/经典文章候选池", md)
+        self.assertIn("Headline", md)
+        self.assertIn("Blog Post", md)
+
+    def test_save_raw_materials_enabled_defaults_true(self):
+        self.assertTrue(save_raw_materials_enabled({}))
+        self.assertTrue(save_raw_materials_enabled({"digest": {}}))
+        self.assertFalse(
+            save_raw_materials_enabled({"digest": {"save_raw_materials_doc": False}})
+        )
 
 
 if __name__ == "__main__":

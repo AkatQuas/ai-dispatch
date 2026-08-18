@@ -11,6 +11,7 @@ from ai_dispatch.issue_store import publish_today_report
 from ai_dispatch.langfuse_tracing import observe
 from ai_dispatch.llm import DEFAULT_MODEL, complete
 from ai_dispatch.paths import CONFIG_PATH, HISTORY_PATH, REPORT_DIR
+from ai_dispatch.lark_doc import create_doc_with_markdown
 from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
 
 HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
@@ -119,6 +120,64 @@ def is_digest_complete(md: str) -> bool:
     return all(marker in md for marker in DIGEST_SECTION_MARKERS)
 
 
+def format_articles_text(articles: list[dict]) -> str:
+    return "\n\n---\n\n".join(
+        f"[{a['source']}] ({a['published']})\n标题: {a['title']}\n链接: {a['url']}\n摘要: {a['summary']}"
+        for a in articles
+    )
+
+
+def format_blogs_text(
+    blog_candidates: list[dict],
+    *,
+    empty_message: str = "（暂无候选，所有文章均已推送过）",
+) -> str:
+    if not blog_candidates:
+        return empty_message
+    return "\n\n---\n\n".join(
+        f"[{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n简介: {b['summary']}"
+        for b in blog_candidates
+    )
+
+
+def format_raw_materials_markdown(
+    articles: list[dict], blog_candidates: list[dict], cfg: dict
+) -> str:
+    d = cfg["digest"]
+    today = datetime.now().strftime("%Y年%m月%d日")
+    return f"""# AI Dispatch 原始资料 {today}
+
+> 新闻 {len(articles)} 条 · 博客/经典 {len(blog_candidates)} 篇 · 新闻回溯 {d["news_hours"]} 小时
+
+## 新闻资讯
+
+{format_articles_text(articles)}
+
+## 博客/经典文章候选池
+
+{format_blogs_text(blog_candidates)}
+"""
+
+
+def save_raw_materials_enabled(cfg: dict) -> bool:
+    return cfg.get("digest", {}).get("save_raw_materials_doc", True)
+
+
+def save_raw_materials_doc(
+    articles: list[dict], blog_candidates: list[dict], cfg: dict
+) -> str | None:
+    """Create a Lark docx with raw fetched materials (folder only, no notification)."""
+    markdown = format_raw_materials_markdown(articles, blog_candidates, cfg)
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    title = f"{today} 原始资料"
+
+    try:
+        return create_doc_with_markdown(title, markdown)
+    except Exception as e:
+        print(f"[WARN] Failed to create raw materials doc: {e}", file=sys.stderr)
+        return None
+
+
 def _fetch_feeds(feeds: dict, hours: int, per_source: int, arxiv_keywords: list[str]) -> list[dict]:
     cutoff = datetime.now(UTC) - timedelta(hours=hours)
     articles = []
@@ -207,18 +266,8 @@ def summarize(
     topics_str = "、".join(cfg["topics"])
     lang = d.get("output_language", "中文")
 
-    articles_text = "\n\n---\n\n".join(
-        f"[{a['source']}] ({a['published']})\n标题: {a['title']}\n链接: {a['url']}\n摘要: {a['summary']}"
-        for a in articles
-    )
-    blogs_text = (
-        "\n\n---\n\n".join(
-            f"[{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n简介: {b['summary']}"
-            for b in blog_candidates
-        )
-        if blog_candidates
-        else "（暂无候选，所有文章均已推送过）"
-    )
+    articles_text = format_articles_text(articles)
+    blogs_text = format_blogs_text(blog_candidates)
 
     today = datetime.now().strftime("%Y年%m月%d日")
 
@@ -361,6 +410,14 @@ def main() -> None:
     if recent_reports:
         dates = ", ".join(date for date, _ in recent_reports)
         print(f"Loaded {len(recent_reports)} recent report(s) for dedup: {dates}")
+
+    if save_raw_materials_enabled(cfg):
+        print("Creating raw materials Lark doc...")
+        raw_doc_url = save_raw_materials_doc(articles, blog_candidates, cfg)
+        if raw_doc_url:
+            print(f"Raw materials saved to {raw_doc_url}")
+        else:
+            print("[WARN] Raw materials doc creation failed, continuing with digest.")
 
     model = cfg["digest"].get("model", DEFAULT_MODEL)
     print(f"Summarizing with DeepSeek ({model})...")
