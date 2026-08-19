@@ -22,6 +22,35 @@
 
 ---
 
+## 原料流水线（抓取 → 清洗 → 处理）
+
+送入 LLM 之前，RSS 会经过 `ai_dispatch/feed_pipeline.py` 三阶段处理：
+
+| 阶段 | 作用 |
+| ---- | ---- |
+| **Fetch 抓取** | 并行 HTTP 下载，单源超时 + 全局 QPS 限速（`fetch_max_workers`、`fetch_min_interval_seconds`） |
+| **Clean 清洗** | 去 HTML/实体，剥 HN 模板噪声，提取 Radarai「一句话摘要」，summary 为空时回退 `entry.content` |
+| **Process 处理** | URL 规范化、标题去重、按 `topics` 打分、按池子上限截断（`news_max_items`、`arxiv_max_items`、`blog_max_items`） |
+
+只有处理后的快照会进入 LLM prompt（也可选存为飞书「原始资料」文档）。日志会显示压缩比，例如 `News pipeline: 180 fetched → 40 for LLM`。
+
+`config.yml` 中 `digest` 段常用参数：
+
+| 参数 | 默认 | 说明 |
+| ---- | ---- | ---- |
+| `news_max_items` | 40 | 送入 LLM 的新闻上限 |
+| `arxiv_max_items` | 30 | 新闻池中保留的 arXiv 论文上限 |
+| `blog_max_items` | 25 | 送入 LLM 的博客 RSS 上限 |
+| `blog_classics_max` | 3 | 经典/访谈候选上限 |
+| `fetch_max_workers` | 3 | 并行抓取 worker 数 |
+| `fetch_min_interval_seconds` | 0.5 | 任意两次 HTTP 请求的最小间隔（秒） |
+| `hn_min_points` | 5 | HN RSS 最低热度，过滤 Show HN 噪声 |
+| `summary_max_chars` | 400 | 单条清洗后摘要上限 |
+
+`news_feeds` 已默认启用 **arXiv**（`cs.AI` / `cs.RO` / `cs.LG`），经 `arxiv_keywords` 过滤后供「值得深挖」板块使用。
+
+---
+
 ## 快速开始
 
 ### 前置条件
@@ -226,7 +255,7 @@ cd ai-dispatch
 uv sync                              # 创建 .venv 并安装锁定依赖
 uv sync --group dev                  # 含 ruff + pre-commit
 uv run python setup.py               # 交互式首次配置
-uv run python -m unittest tests.test_llm -v
+uv run python -m unittest discover -s tests -v
 uv run python check_setup.py             # 完整配置检查（需要 .env 中的密钥）
 ```
 
@@ -297,7 +326,8 @@ ai-dispatch/
 ├── setup.py                ← 交互式配置向导
 ├── check_setup.py          ← 配置验证（辅助脚本）
 ├── ai_dispatch/            ← 应用库（单层 package）
-│   ├── fetch_news.py       ← 主程序
+│   ├── fetch_news.py       ← 主编排：抓取 → 总结 → 飞书
+│   ├── feed_pipeline.py    ← RSS 抓取 · 清洗 · 去重 · 打分 · 截断
 │   ├── issue_store.py      ← 通过 GitHub Issues 持久化状态与报告
 │   ├── llm.py              ← DeepSeek API 客户端
 │   ├── langfuse_tracing.py ← 可选 Langfuse 追踪
@@ -306,6 +336,8 @@ ai-dispatch/
 │   ├── send_lark_message.py← 飞书机器人消息发送
 │   └── paths.py            ← 项目根路径
 ├── tests/
+│   ├── test_feed_pipeline.py
+│   ├── test_fetch_news.py
 │   └── test_llm.py
 ├── scripts/
 │   └── smoke_test.py       ← pre-commit / CI 冒烟测试

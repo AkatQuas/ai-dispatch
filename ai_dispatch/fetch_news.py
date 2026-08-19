@@ -1,12 +1,17 @@
 import json
 import re
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
-import feedparser
 import yaml
 
+from ai_dispatch.feed_pipeline import (
+    build_classics,
+    fetch_feeds,
+    normalize_url,
+    process_articles,
+)
 from ai_dispatch.issue_store import publish_today_report
 from ai_dispatch.langfuse_tracing import observe
 from ai_dispatch.lark_doc import create_doc_with_markdown
@@ -178,79 +183,45 @@ def save_raw_materials_doc(
         return None
 
 
-def _fetch_feeds(feeds: dict, hours: int, per_source: int, arxiv_keywords: list[str]) -> list[dict]:
-    cutoff = datetime.now(UTC) - timedelta(hours=hours)
-    articles = []
-
-    for source, url in feeds.items():
-        try:
-            feed = feedparser.parse(url, request_headers={"User-Agent": "Mozilla/5.0"})
-            for entry in feed.entries[:per_source]:
-                published = None
-                for attr in ("published_parsed", "updated_parsed"):
-                    t = getattr(entry, attr, None)
-                    if t:
-                        published = datetime(*t[:6], tzinfo=UTC)
-                        break
-
-                if published and published < cutoff:
-                    continue
-
-                title = entry.get("title", "")
-                summary = entry.get("summary", "")
-                text = (title + " " + summary).lower()
-
-                if source.startswith("arxiv") and not any(kw in text for kw in arxiv_keywords):
-                    continue
-
-                articles.append(
-                    {
-                        "source": source,
-                        "title": title,
-                        "url": entry.get("link", ""),
-                        "summary": summary[:1000] if summary else "",
-                        "published": published.strftime("%Y-%m-%d %H:%M UTC")
-                        if published
-                        else "Unknown",
-                    }
-                )
-        except Exception as e:
-            print(f"[WARN] {source}: {e}", file=sys.stderr)
-
-    return articles
-
-
 def fetch_recent_articles(cfg: dict) -> list[dict]:
+    """Fetch news RSS (parallel, rate-limited) → clean → dedup → rank → cap."""
     d = cfg["digest"]
-    return _fetch_feeds(
-        cfg["news_feeds"], d["news_hours"], d["news_per_source"], cfg["arxiv_keywords"]
+    raw = fetch_feeds(
+        cfg["news_feeds"],
+        d["news_hours"],
+        d["news_per_source"],
+        cfg["arxiv_keywords"],
+        d,
+        feed_kind="news",
     )
+    processed = process_articles(raw, cfg, pool="news")
+    if len(raw) != len(processed):
+        print(f"  News pipeline: {len(raw)} fetched → {len(processed)} for LLM")
+    return processed
 
 
 def fetch_blog_candidates(cfg: dict, history: set[str]) -> list[dict]:
-    """抓取近 blog_days 天的博客文章 + 读取经典列表，过滤已推送过的。"""
+    """抓取近 blog_days 天的博客 + 经典列表，过滤已推送过的。"""
     d = cfg["digest"]
     blog_hours = d["blog_days"] * 24
+    history_norm = {normalize_url(url) for url in history}
 
-    # RSS 博客
-    rss_blogs = _fetch_feeds(
-        cfg["blog_feeds"], blog_hours, d["blog_per_source"], cfg["arxiv_keywords"]
+    raw = fetch_feeds(
+        cfg["blog_feeds"],
+        blog_hours,
+        d["blog_per_source"],
+        cfg["arxiv_keywords"],
+        d,
+        feed_kind="blog",
     )
+    blogs = process_articles(raw, cfg, pool="blog")
+    if len(raw) != len(blogs):
+        print(f"  Blog pipeline: {len(raw)} fetched → {len(blogs)} for LLM")
+    blogs = [b for b in blogs if normalize_url(b["url"]) not in history_norm]
 
-    # 经典文章（无时间限制，从 config 读取）
-    classics = [
-        {
-            "source": f"{c.get('type', 'classic').title()} · {c.get('author', '')}",
-            "title": c["title"],
-            "url": c["url"],
-            "summary": c.get("note", ""),
-            "published": str(c.get("year", "经典")),
-        }
-        for c in (cfg.get("classics") or [])
-    ]
-
-    # 合并后过滤历史
-    return [a for a in rss_blogs + classics if a["url"] not in history]
+    classics_max = int(d.get("blog_classics_max", 3))
+    classics = build_classics(cfg, history, classics_max)
+    return blogs + classics
 
 
 @observe(name="summarize-digest", capture_input=False)

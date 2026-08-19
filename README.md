@@ -24,6 +24,35 @@ Every digest contains five structured sections:
 
 ---
 
+## How the Feed Pipeline Works
+
+Before the LLM sees anything, raw RSS goes through a **fetch → clean → process** pipeline (`ai_dispatch/feed_pipeline.py`):
+
+| Stage | What it does |
+| ----- | ------------ |
+| **Fetch** | Parallel HTTP downloads with per-request timeout and global QPS cap (`fetch_max_workers`, `fetch_min_interval_seconds`) |
+| **Clean** | Strip HTML/entities, normalize Hacker News boilerplate, extract Radarai one-liners, fall back to `entry.content` when summary is empty |
+| **Process** | URL normalization, title dedup, topic-keyword scoring, per-pool caps (`news_max_items`, `arxiv_max_items`, `blog_max_items`) |
+
+Only the processed snapshot is sent to the LLM (and optionally saved as a Lark **Raw Materials** doc). Logs show compression, e.g. `News pipeline: 180 fetched → 40 for LLM`.
+
+Key `digest` knobs in `config.yml`:
+
+| Setting | Default | Purpose |
+| ------- | ------- | ------- |
+| `news_max_items` | 40 | Max news items after ranking |
+| `arxiv_max_items` | 30 | Max arXiv papers kept in the news pool |
+| `blog_max_items` | 25 | Max blog RSS items for LLM |
+| `blog_classics_max` | 3 | Max classic/interview picks in the blog pool |
+| `fetch_max_workers` | 3 | Parallel RSS fetch workers |
+| `fetch_min_interval_seconds` | 0.5 | Minimum gap between any two HTTP requests |
+| `hn_min_points` | 5 | Drop low-score Hacker News RSS items |
+| `summary_max_chars` | 400 | Max cleaned summary length per item |
+
+`news_feeds` includes enabled **arXiv** sources (`cs.AI`, `cs.RO`, `cs.LG`) filtered by `arxiv_keywords` for the **Papers Worth Reading** section.
+
+---
+
 ## Quick Start
 
 No terminal required — everything runs in your browser.
@@ -230,7 +259,7 @@ cd ai-dispatch
 uv sync                              # create .venv and install locked deps
 uv sync --group dev                  # include ruff + pre-commit
 uv run python setup.py               # interactive first-time setup
-uv run python -m unittest tests.test_llm -v
+uv run python -m unittest discover -s tests -v
 uv run python check_setup.py             # full setup check (needs .env secrets)
 ```
 
@@ -301,7 +330,8 @@ ai-dispatch/
 ├── setup.py                ← Interactive setup wizard
 ├── check_setup.py          ← Setup verification (helper)
 ├── ai_dispatch/            ← Application library (single package layer)
-│   ├── fetch_news.py       ← Main pipeline
+│   ├── fetch_news.py       ← Orchestration: fetch → summarize → Lark
+│   ├── feed_pipeline.py    ← RSS fetch · clean · dedup · rank · cap
 │   ├── issue_store.py      ← Persist state/reports via GitHub Issues
 │   ├── llm.py              ← DeepSeek API client
 │   ├── langfuse_tracing.py ← Optional Langfuse tracing
@@ -310,6 +340,8 @@ ai-dispatch/
 │   ├── send_lark_message.py← Lark bot messaging
 │   └── paths.py            ← Project root paths
 ├── tests/
+│   ├── test_feed_pipeline.py
+│   ├── test_fetch_news.py
 │   └── test_llm.py
 ├── scripts/
 │   └── smoke_test.py       ← pre-commit / CI smoke test

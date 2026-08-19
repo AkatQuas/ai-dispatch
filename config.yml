@@ -18,9 +18,9 @@ topics:
 # ──────────────────────────────────────────────
 news_feeds:
   Anthropic Official: https://www.anthropic.com/news/feed.xml
-  # arxiv cs.AI: https://rss.arxiv.org/rss/cs.AI
-  # arxiv cs.RO: https://rss.arxiv.org/rss/cs.RO
-  # arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
+  arxiv cs.AI: https://rss.arxiv.org/rss/cs.AI
+  arxiv cs.RO: https://rss.arxiv.org/rss/cs.RO
+  arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
   Baoyu: https://s.baoyu.io/feed.xml
   Ben's Bites: https://www.bensbites.com/feed
   Andrej Karpathy RSS: https://karpathy.github.io/feed.xml
@@ -141,8 +141,19 @@ digest:
   save_raw_materials_doc: true # 送 LLM 总结前，将新闻+博客/经典原文单独存为飞书文档（默认开启）
   news_hours: 24 # 新闻回溯窗口（小时）
   blog_days: 90 # 博客 RSS 回溯窗口（天）
-  news_per_source: 50 # 每个新闻源最多抓取条数
+  news_per_source: 50 # 每个新闻源最多抓取条数（时间过滤后截断）
   blog_per_source: 20 # 每个博客最多抓取条数
+  news_max_items: 40 # 经清洗/去重/打分后，送入 LLM 的新闻上限
+  blog_max_items: 25 # 送入 LLM 的博客 RSS 上限（不含 classics）
+  blog_classics_max: 3 # 经典文章候选池最多保留几篇
+  arxiv_max_items: 30 # arxiv 条目在新闻池中的优先保留上限（与 news_max_items 共同作用）
+  # 抓取并发与限速（全局串行间隔，避免 RSS 源 QPS 过高）
+  fetch_max_workers: 3 # 并行 worker 数
+  fetch_timeout_seconds: 15 # 单源 HTTP 超时
+  fetch_min_interval_seconds: 0.5 # 任意两次请求之间的最小间隔（秒）
+  require_published_date: true # 无发布时间的条目丢弃（避免陈旧内容）
+  hn_min_points: 5 # HackerNews RSS 最低热度，过滤 Show HN 噪声
+  summary_max_chars: 400 # 单条摘要上限（清洗 HTML 后）
   model: deepseek-v4-flash # deepseek-v4-flash | deepseek-v4-pro
   reasoning_effort: low # low | high | max（v4-flash 的 low 为真 low；v4-pro 的 low 会映射为 high）
   max_tokens: 16000

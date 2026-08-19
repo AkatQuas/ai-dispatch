@@ -1,4 +1,4 @@
-<svg width="960" height="300" viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif">
+<svg width="1000" height="340" viewBox="0 0 1000 340" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif">
   <defs>
     <marker id="arr-gray" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8"/>
@@ -9,32 +9,29 @@
     <marker id="arr-dashed" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
       <path d="M0,0 L0,6 L8,3 z" fill="#a78bfa"/>
     </marker>
+    <marker id="arr-teal" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#0d9488"/>
+    </marker>
   </defs>
 
-  <!-- Background -->
-  <rect width="960" height="300" fill="#ffffff"/>
+  <rect width="1000" height="340" fill="#ffffff"/>
 
   <!-- ── SECTION 1: One-time Setup ─────────────────────────────── -->
   <rect x="16" y="12" width="292" height="224" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="162" y="40" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="0.08em">ONE-TIME SETUP</text>
 
-  <!-- Fork box -->
   <rect x="32" y="54" width="116" height="52" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="90" y="76" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Fork</text>
   <text x="90" y="92" text-anchor="middle" fill="#64748b" font-size="10">on GitHub</text>
 
-  <!-- arrow -->
   <line x1="150" y1="80" x2="168" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- Setup wizard box -->
   <rect x="172" y="54" width="120" height="52" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
   <text x="232" y="76" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">uv run setup.py</text>
   <text x="232" y="92" text-anchor="middle" fill="#c7d2fe" font-size="10">2 min · guided</text>
 
-  <!-- down arrow -->
   <line x1="232" y1="108" x2="232" y2="138" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- Secrets + config box -->
   <rect x="32" y="142" width="260" height="72" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="36" y="162" fill="#22c55e" font-size="11">✓</text>
   <text x="50" y="162" fill="#475569" font-size="10">GitHub Secrets written automatically</text>
@@ -43,94 +40,101 @@
   <text x="36" y="198" fill="#22c55e" font-size="11">✓</text>
   <text x="50" y="198" fill="#475569" font-size="10">Ready — no code editing needed</text>
 
-  <!-- ── BIG ARROW between sections ───────────────────────── -->
   <line x1="316" y1="124" x2="352" y2="124" stroke="#6366f1" stroke-width="2.5" marker-end="url(#arr-indigo)"/>
   <text x="334" y="118" text-anchor="middle" fill="#6366f1" font-size="9" font-weight="700">THEN</text>
 
   <!-- ── SECTION 2: Every Morning ──────────────────────────────── -->
-  <rect x="356" y="12" width="578" height="256" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="650" y="34" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="0.08em">EVERY MORNING · FULLY AUTOMATIC</text>
+  <rect x="356" y="12" width="640" height="296" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="680" y="34" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="0.08em">EVERY MORNING · FULLY AUTOMATIC</text>
 
-  <!-- ══════ Row 1: Main Pipeline (y=44, h=72) ══════ -->
+  <!-- Row 1: Main pipeline -->
+  <rect x="372" y="48" width="72" height="76" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="414" y="70" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">RSS</text>
+  <text x="408" y="86" text-anchor="middle" fill="#64748b" font-size="9">news · blogs</text>
+  <text x="408" y="100" text-anchor="middle" fill="#64748b" font-size="9">arxiv · classics</text>
 
-  <!-- RSS Feeds -->
-  <rect x="372" y="44" width="85" height="72" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="414" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">RSS Feeds</text>
-  <text x="414" y="83" text-anchor="middle" fill="#64748b" font-size="10">20+ sources</text>
-  <text x="414" y="99" text-anchor="middle" fill="#64748b" font-size="10">news · blogs</text>
+  <line x1="446" y1="86" x2="466" y2="86" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- arrow: RSS → LLM -->
-  <line x1="457" y1="80" x2="467" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <!-- Feed pipeline group -->
+  <rect x="466" y="44" width="198" height="84" rx="10" fill="#ecfdf5" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="570" y="60" text-anchor="middle" fill="#0f766e" font-size="9" font-weight="700" letter-spacing="0.06em">FEED PIPELINE</text>
 
-  <!-- LLM Analysis -->
-  <rect x="467" y="44" width="95" height="72" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="514" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">LLM Analysis</text>
-  <text x="514" y="83" text-anchor="middle" fill="#64748b" font-size="10">DeepSeek API</text>
-  <text x="514" y="99" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">dedupe vs history</text>
+  <rect x="472" y="68" width="52" height="40" rx="6" fill="#ffffff" stroke="#99f6e4" stroke-width="1"/>
+  <text x="498" y="84" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="700">Fetch</text>
+  <text x="498" y="98" text-anchor="middle" fill="#64748b" font-size="8">parallel</text>
 
-  <!-- arrow: LLM → Digest -->
-  <line x1="562" y1="80" x2="572" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <text x="532" y="90" text-anchor="middle" fill="#14b8a6" font-size="10" font-weight="700">→</text>
 
-  <!-- Daily Digest -->
-  <rect x="572" y="44" width="85" height="72" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="614" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Daily Digest</text>
-  <text x="614" y="83" text-anchor="middle" fill="#64748b" font-size="10">5 sections</text>
-  <text x="614" y="99" text-anchor="middle" fill="#64748b" font-size="10">Markdown</text>
+  <rect x="540" y="68" width="52" height="40" rx="6" fill="#ffffff" stroke="#99f6e4" stroke-width="1"/>
+  <text x="566" y="84" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="700">Clean</text>
+  <text x="566" y="98" text-anchor="middle" fill="#64748b" font-size="8">HTML · HN</text>
 
-  <!-- arrow: Digest → Lark Doc -->
-  <line x1="657" y1="80" x2="667" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <text x="600" y="90" text-anchor="middle" fill="#14b8a6" font-size="10" font-weight="700">→</text>
 
-  <!-- Lark Doc -->
-  <rect x="667" y="44" width="85" height="72" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="709" y="66" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="700">Lark Doc</text>
-  <text x="709" y="83" text-anchor="middle" fill="#64748b" font-size="10">Cloud docx</text>
-  <text x="709" y="99" text-anchor="middle" fill="#64748b" font-size="10">Bot link</text>
+  <rect x="608" y="68" width="52" height="40" rx="6" fill="#ffffff" stroke="#99f6e4" stroke-width="1"/>
+  <text x="635" y="84" text-anchor="middle" fill="#1e293b" font-size="9" font-weight="700">Process</text>
+  <text x="634" y="98" text-anchor="middle" fill="#64748b" font-size="8">dedup · cap</text>
 
-  <!-- arrow: Lark Doc → Bot Link -->
-  <line x1="752" y1="80" x2="762" y2="80" stroke="#6366f1" stroke-width="2" marker-end="url(#arr-indigo)"/>
+  <text x="570" y="118" text-anchor="middle" fill="#0d9488" font-size="8">QPS-limited · feedparser</text>
 
-  <!-- Bot Link → Your Lark -->
-  <rect x="762" y="44" width="75" height="72" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
-  <text x="799" y="70" text-anchor="middle" font-size="22">📄</text>
-  <text x="799" y="92" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">BOT LINK</text>
-  <text x="799" y="104" text-anchor="middle" fill="#c7d2fe" font-size="9">→ YOUR LARK</text>
+  <line x1="666" y1="86" x2="682" y2="86" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- ══════ Row 2: State Management &amp; Persistence (y=136, h=50) ══════ -->
+  <rect x="684" y="48" width="76" height="76" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="721" y="70" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">LLM</text>
+  <text x="721" y="86" text-anchor="middle" fill="#64748b" font-size="9">DeepSeek</text>
+  <text x="721" y="100" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">history dedupe</text>
 
-  <!-- GitHub Issues box -->
-  <rect x="372" y="136" width="175" height="50" rx="8" fill="#faf5ff" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <text x="459" y="156" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="700">📦 GitHub Issues</text>
-  <text x="459" y="174" text-anchor="middle" fill="#7c3aed" font-size="9">ai-dispatch-state / ai-dispatch-report</text>
+  <line x1="762" y1="86" x2="776" y2="86" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- arrow: Issues → Load -->
-  <line x1="547" y1="161" x2="557" y2="161" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <rect x="780" y="48" width="66" height="76" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="814" y="70" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">Digest</text>
+  <text x="814" y="86" text-anchor="middle" fill="#64748b" font-size="9">5 sections</text>
+  <text x="814" y="100" text-anchor="middle" fill="#64748b" font-size="9">Markdown</text>
 
-  <!-- Load State & Reports -->
-  <rect x="557" y="136" width="160" height="50" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="637" y="156" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">⬇ Load State &amp; Reports</text>
-  <text x="637" y="174" text-anchor="middle" fill="#64748b" font-size="9">sent_history.json · report/*.md</text>
+  <line x1="850" y1="86" x2="864" y2="86" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- arrow: Load → Persist -->
-  <line x1="717" y1="161" x2="727" y2="161" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <rect x="866" y="48" width="66" height="76" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="900" y="70" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">Lark Doc</text>
+  <text x="900" y="86" text-anchor="middle" fill="#64748b" font-size="9">cloud docx</text>
+  <text x="900" y="100" text-anchor="middle" fill="#64748b" font-size="9">bot link</text>
 
-  <!-- Persist via Issues -->
-  <rect x="727" y="136" width="190" height="50" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="822" y="156" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">⬆ Persist via Issues</text>
-  <text x="822" y="174" text-anchor="middle" fill="#64748b" font-size="9">save state · publish report Issue</text>
+  <line x1="934" y1="86" x2="948" y2="86" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr-indigo)"/>
 
-  <!-- ══════ Connector arrows ══════ -->
+  <rect x="952" y="48" width="34" height="76" rx="8" fill="#6366f1" stroke="#4f46e5" stroke-width="1.5"/>
+  <text x="968" y="78" text-anchor="middle" font-size="18">📄</text>
+  <text x="968" y="96" text-anchor="middle" fill="#ffffff" font-size="8" font-weight="700">YOU</text>
 
-  <!-- Dashed arrow: Load → LLM (recent reports provide dedup context) -->
-  <path d="M 637 136 L 637 124 L 514 124 L 514 116" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr-dashed)"/>
+  <!-- Raw materials branch -->
+  <path d="M 644 124 L 644 138 L 520 138 L 520 152" fill="none" stroke="#0d9488" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr-teal)"/>
+  <rect x="430" y="152" width="180" height="36" rx="8" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="520" y="168" text-anchor="middle" fill="#0f766e" font-size="9" font-weight="700">Optional: Raw Materials Lark Doc</text>
+  <text x="520" y="182" text-anchor="middle" fill="#64748b" font-size="8">processed feed snapshot</text>
 
-  <!-- Solid arrow: Digest → Persist (today's report flows to persist step) -->
-  <path d="M 614 116 L 614 128 L 822 128 L 822 136" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+  <!-- Row 2: State management -->
+  <rect x="372" y="200" width="175" height="50" rx="8" fill="#faf5ff" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="459" y="220" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="700">📦 GitHub Issues</text>
+  <text x="459" y="238" text-anchor="middle" fill="#7c3aed" font-size="9">ai-dispatch-state / ai-dispatch-report</text>
 
-  <!-- What's inside -->
-  <text x="372" y="216" fill="#1e293b" font-size="10" font-weight="700">What's inside:</text>
-  <text x="372" y="232" fill="#64748b" font-size="10">📌 Top Stories · 📈 Trends · 🔬 Papers · 📖 Blog Pick · 💡 Today's Signal</text>
-  <text x="372" y="248" fill="#94a3b8" font-size="10">History-aware · No repeat news · GitHub Actions free</text>
+  <line x1="547" y1="225" x2="557" y2="225" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
 
-  <!-- Footer -->
-  <text x="460" y="290" text-anchor="middle" fill="#cbd5e1" font-size="9.5">📡 AI Dispatch · github.com/AkatQuas/ai-dispatch</text>
+  <rect x="557" y="200" width="155" height="50" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="632" y="220" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">⬇ Load State &amp; Reports</text>
+  <text x="632" y="238" text-anchor="middle" fill="#64748b" font-size="9">sent_history · recent digests</text>
+
+  <line x1="712" y1="225" x2="722" y2="225" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <rect x="722" y="200" width="178" height="50" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="819" y="220" text-anchor="middle" fill="#1e293b" font-size="10" font-weight="700">⬆ Persist via Issues</text>
+  <text x="819" y="238" text-anchor="middle" fill="#64748b" font-size="9">save state · publish report</text>
+
+  <!-- Connectors -->
+  <path d="M 632 200 L 632 132 L 721 132 L 721 124" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr-dashed)"/>
+  <path d="M 804 124 L 804 188 L 819 188 L 819 200" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+  <!-- Footer notes -->
+  <text x="372" y="268" fill="#1e293b" font-size="10" font-weight="700">What's inside:</text>
+  <text x="372" y="284" fill="#64748b" font-size="10">📌 Top Stories · 📈 Trends · 🔬 Papers · 📖 Blog Pick · 💡 Today's Signal</text>
+  <text x="372" y="300" fill="#94a3b8" font-size="9">Topic-ranked · URL dedup · arXiv enabled · GitHub Actions free</text>
+
+  <text x="500" y="330" text-anchor="middle" fill="#cbd5e1" font-size="9.5">📡 AI Dispatch · github.com/AkatQuas/ai-dispatch</text>
 </svg>
