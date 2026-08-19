@@ -9,9 +9,9 @@ import yaml
 
 from ai_dispatch.issue_store import publish_today_report
 from ai_dispatch.langfuse_tracing import observe
+from ai_dispatch.lark_doc import create_doc_with_markdown
 from ai_dispatch.llm import DEFAULT_MODEL, complete
 from ai_dispatch.paths import CONFIG_PATH, HISTORY_PATH, REPORT_DIR
-from ai_dispatch.lark_doc import create_doc_with_markdown
 from ai_dispatch.send_lark_message import lark_configured, send_lark_digest
 
 HISTORY_MAX = 200  # 最多保留最近 200 条（≈200 天），防止无限增长
@@ -291,34 +291,40 @@ def summarize(
 用户重点关注的方向：{topics_str}。
 所有输出请使用{lang}。
 
+### 核心规则
 【重要规则】任何引用今日或近几日回归的内容（新闻、博客、论文、数据、动态）的地方，一律附上原始链接。没有来源链接的判断或引用不应出现。飞书文档支持 markdown 语法，使用 `[标题](链接)` 的格式。
 
+### 历史报告
 {history_section}
-【新闻资讯】过去 {d["news_hours"]} 小时，共 {len(articles)} 条：
+
+### 新闻资讯
+过去 {d["news_hours"]} 小时，共 {len(articles)} 条：
 
 {articles_text}
 
-【博客/经典文章候选池】共 {len(blog_candidates)} 篇（含近期博客、经典文章、访谈、大佬经验分享，均未推送过）：
+### 博客/经典文章候选池
+# 共 {len(blog_candidates)} 篇（含近期博客、经典文章、访谈、大佬经验分享，均未推送过）：
 
 {blogs_text}
 
-请完成以下五个部分，严格使用 Markdown 格式输出（不要加代码块围栏、不要输出 HTML 标签）：
+### 输出要求
+按照五个章节，严格使用 Markdown 格式输出（不要加代码块围栏、不要输出 HTML 标签）：
 
-第一部分：重点新闻（10-15条，优先与用户关注方向相关）
+第一小节：重点新闻（10-15条，优先与用户关注方向相关）
 每条包含：发生了什么（1句）、技术/商业意义（2-3句，要有判断和立场）、与其他动态的关联（如有）。
 
-第二部分：趋势分析
+第二小节：趋势分析
 识别 2-3 个值得关注的技术或行业趋势，需有证据引用（每条引用必须附链接），给出预判。
 
-第三部分：值得深挖
+第三小节：值得深挖
 2-3 篇值得精读的论文或报告（优先 arxiv），说明核心贡献和阅读重点，每篇必须附链接。
 
-第四部分：今日推荐博客
+第四小节：今日推荐博客
 从候选池中挑选 1 篇最值得精读的（可以是近期博客、经典文章、访谈或经验分享，不限时间）。
 优先选择与今日新闻趋势有呼应的，或能提供长期视角的经典。
 给出：为什么今天推荐这篇（结合当下背景）、3 个核心观点（bullet）、适合谁读、大致阅读时间。
 
-第五部分：今日信号
+第五小节：今日信号
 最关键的一个判断，不超过 60 字。
 
 以下为输出格式示例（仅作参考，你的正文不要包含代码块围栏）：
