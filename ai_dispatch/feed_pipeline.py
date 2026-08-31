@@ -382,9 +382,7 @@ def rank_articles(
 def strip_internal_fields(articles: list[dict]) -> list[dict]:
     cleaned: list[dict] = []
     for item in articles:
-        cleaned.append(
-            {k: v for k, v in item.items() if not k.startswith("_")}
-        )
+        cleaned.append({k: v for k, v in item.items() if not k.startswith("_")})
     return cleaned
 
 
@@ -407,9 +405,7 @@ def process_articles(
         arxiv_items = [a for a in deduped if a.get("kind") == "arxiv"]
         other_items = [a for a in deduped if a.get("kind") != "arxiv"]
         ranked = rank_articles(arxiv_items, topics, keywords, max_items=arxiv_max)
-        ranked.extend(
-            rank_articles(other_items, topics, keywords, max_items=news_max)
-        )
+        ranked.extend(rank_articles(other_items, topics, keywords, max_items=news_max))
         return strip_internal_fields(ranked)
 
     if pool == "blog":

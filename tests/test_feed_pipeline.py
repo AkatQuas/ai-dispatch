@@ -23,8 +23,8 @@ class CleanHtmlTests(unittest.TestCase):
 
     def test_strips_hn_boilerplate(self):
         raw = (
-            "<p>Article URL: <a href=\"https://example.com\">link</a></p>"
-            "<p>Comments URL: <a href=\"https://news.ycombinator.com/item?id=1\">c</a></p>"
+            '<p>Article URL: <a href="https://example.com">link</a></p>'
+            '<p>Comments URL: <a href="https://news.ycombinator.com/item?id=1">c</a></p>'
             "<p>Points: 1</p><p># Comments: 0</p>"
             "Actual summary here."
         )

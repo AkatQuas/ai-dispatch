@@ -93,9 +93,7 @@ class ReportSummaryTests(unittest.TestCase):
     def test_save_raw_materials_enabled_defaults_true(self):
         self.assertTrue(save_raw_materials_enabled({}))
         self.assertTrue(save_raw_materials_enabled({"digest": {}}))
-        self.assertFalse(
-            save_raw_materials_enabled({"digest": {"save_raw_materials_doc": False}})
-        )
+        self.assertFalse(save_raw_materials_enabled({"digest": {"save_raw_materials_doc": False}}))
 
 
 if __name__ == "__main__":

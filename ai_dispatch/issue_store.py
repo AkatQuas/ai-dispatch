@@ -265,14 +265,6 @@ def materialize_recent_reports(count: int = 3) -> None:
         print("[issue_store] no report Issues to materialize")
 
 
-def get_issue_title_from_file(filepath: Path) -> str:
-    first = filepath.read_text(encoding="utf-8").splitlines()[:1]
-    title = first[0].lstrip("#").strip() if first else ""
-    if not title:
-        title = f"AI Dispatch Report - {filepath.stem}"
-    return title[:120]
-
-
 def report_issue_exists_for_date(date: str) -> bool:
     for it in list_report_issues(limit=30):
         if extract_date_from_issue(it.get("title") or "", it.get("body") or "") == date:
@@ -293,7 +285,7 @@ def publish_report_file(filepath: Path) -> bool:
 
     raw = filepath.read_text(encoding="utf-8")
     body = f"<!-- ai-dispatch-date: {date} -->\n\n{raw}"
-    title = get_issue_title_from_file(filepath)
+    title = date
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as tmp:
         tmp.write(body)

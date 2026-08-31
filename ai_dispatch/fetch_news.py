@@ -149,10 +149,7 @@ def format_raw_materials_markdown(
     articles: list[dict], blog_candidates: list[dict], cfg: dict
 ) -> str:
     d = cfg["digest"]
-    today = datetime.now().strftime("%Y年%m月%d日")
-    return f"""# AI Dispatch 原始资料 {today}
-
-> 新闻 {len(articles)} 条 · 博客/经典 {len(blog_candidates)} 篇 · 新闻回溯 {d["news_hours"]} 小时
+    return f"""> 新闻 {len(articles)} 条 · 博客/经典 {len(blog_candidates)} 篇 · 新闻回溯 {d["news_hours"]} 小时
 
 ## 新闻资讯
 
@@ -240,8 +237,6 @@ def summarize(
     articles_text = format_articles_text(articles)
     blogs_text = format_blogs_text(blog_candidates)
 
-    today = datetime.now().strftime("%Y年%m月%d日")
-
     if recent_reports:
         max_chars = d.get("report_history_max_chars", 2000)
         history_blocks = "\n\n---\n\n".join(
@@ -301,8 +296,6 @@ def summarize(
 以下为输出格式示例（仅作参考，你的正文不要包含代码块围栏）：
 
 ```markdown
-# AI News {today}
-
 > 新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇
 
 ## ★ 重点新闻
