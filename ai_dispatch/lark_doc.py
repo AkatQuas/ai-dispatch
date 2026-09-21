@@ -17,7 +17,7 @@ from lark_oapi.api.docx.v1 import (
 from lark_oapi.api.drive.v1 import CreatePermissionMemberRequest
 from lark_oapi.api.drive.v1.model.base_member import BaseMember
 
-from ai_dispatch.send_lark_message import get_client
+from ai_dispatch.lark_client import get_client
 
 DOC_TYPE = "docx"
 DEFAULT_DOMAIN = "feishu.cn"

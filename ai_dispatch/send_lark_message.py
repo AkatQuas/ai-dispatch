@@ -1,43 +1,18 @@
-"""Lark (Feishu) message sending for AI Dispatch."""
+"""Lark (Feishu) bot message sending."""
 
 import json
-import os
 import re
 import time
-from datetime import datetime
 
-import lark_oapi as lark
 from lark_oapi.api.im.v1 import (
     CreateMessageRequest,
     CreateMessageRequestBody,
     CreateMessageResponse,
 )
 
-_client: lark.Client | None = None
+from ai_dispatch.lark_client import get_client
 
 LARK_CONTENT_MAX = 28000  # Lark message size limit (leave headroom)
-
-
-def lark_configured() -> bool:
-    return bool(
-        os.getenv("LARK_APP_ID")
-        and os.getenv("LARK_SECRET")
-        and os.getenv("LARK_RECEIVER")
-        and os.getenv("LARK_FOLDER_TOKEN")
-    )
-
-
-def get_client() -> lark.Client:
-    global _client
-    if _client is None:
-        _client = (
-            lark.Client.builder()
-            .app_id(os.environ["LARK_APP_ID"])
-            .app_secret(os.environ["LARK_SECRET"])
-            .log_level(lark.LogLevel.INFO)
-            .build()
-        )
-    return _client
 
 
 def build_interactive_card(
@@ -157,23 +132,3 @@ def html_to_lark_md(html: str) -> str:
     text = re.sub(r"&gt;", ">", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
-
-
-def send_lark_digest(md_body: str) -> bool:
-    """Create a Lark docx with the digest and send a bot message with the doc link."""
-    from ai_dispatch.lark_notify import send_report_as_doc
-
-    if not lark_configured():
-        print(
-            "[INFO] Lark not configured "
-            "(LARK_APP_ID / LARK_SECRET / LARK_RECEIVER / LARK_FOLDER_TOKEN), skipping."
-        )
-        return False
-
-    doc_title = datetime.now().strftime("%Y-%m-%d")
-
-    return send_report_as_doc(
-        title=doc_title,
-        markdown=md_body.strip(),
-        summary=doc_title,
-    )

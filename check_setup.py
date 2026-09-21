@@ -12,10 +12,10 @@ from datetime import datetime
 import yaml
 from dotenv import load_dotenv
 
+from ai_dispatch.lark_client import lark_configured
 from ai_dispatch.lark_notify import send_report_as_doc
 from ai_dispatch.llm import DEFAULT_MODEL, api_key_configured, ping
 from ai_dispatch.paths import CONFIG_PATH, ENV_PATH
-from ai_dispatch.send_lark_message import lark_configured
 
 OK = "✅"
 FAIL = "❌"

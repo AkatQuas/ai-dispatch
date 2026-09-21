@@ -1,0 +1,229 @@
+"""Digest module — prompt, formatting, completeness checks for daily briefings."""
+
+import re
+
+from ai_dispatch.config import AppConfig
+from ai_dispatch.langfuse_tracing import observe
+from ai_dispatch.llm import DEFAULT_MODEL, complete
+
+DIGEST_SECTION_MARKERS = (
+    "## ★ 重点新闻",
+    "## ★ 趋势分析",
+    "## ★ 值得深挖",
+    "## ★ 今日推荐博客",
+    "## ★ 今日信号",
+)
+
+
+def extract_recommended_url(md: str) -> str | None:
+    """从 digest markdown 的「今日推荐博客」小节中提取链接。"""
+    match = re.search(
+        r"(?:###?\s*📖\s*今日推荐博客|今日推荐博客).*?\[.*?\]\(([^)]+)\)",
+        md,
+        re.DOTALL,
+    )
+    return match.group(1) if match else None
+
+
+def summarize_report_for_dedup(content: str, max_chars: int = 2000) -> str:
+    """Compress a past report into titles + signal for lightweight dedup context."""
+    lines: list[str] = []
+
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped:
+            lines.append(re.sub(r"^#+\s*", "", stripped))
+            break
+
+    for match in re.finditer(r"^☆\s+\[([^\]]+)\]\([^)]+\)", content, re.MULTILINE):
+        lines.append(f"- {match.group(1)}")
+
+    signal = re.search(
+        r"^##\s*★\s*今日信号\s*\n+(.+?)(?=\n##\s|\Z)",
+        content,
+        re.MULTILINE | re.DOTALL,
+    )
+    if signal:
+        signal_text = " ".join(signal.group(1).split())
+        if signal_text:
+            lines.append(f"今日信号: {signal_text}")
+
+    summary = "\n".join(lines)
+    if len(summary) > max_chars:
+        summary = summary[: max_chars - 1] + "…"
+    return summary
+
+
+def is_digest_complete(md: str) -> bool:
+    """True when all digest sections are present."""
+    return all(marker in md for marker in DIGEST_SECTION_MARKERS)
+
+
+def format_articles_text(articles: list[dict]) -> str:
+    return "\n\n---\n\n".join(
+        f"[{a['source']}] ({a['published']})\n标题: {a['title']}\n链接: {a['url']}\n摘要: {a['summary']}"
+        for a in articles
+    )
+
+
+def format_blogs_text(
+    blog_candidates: list[dict],
+    *,
+    empty_message: str = "（暂无候选，所有文章均已推送过）",
+) -> str:
+    if not blog_candidates:
+        return empty_message
+    return "\n\n---\n\n".join(
+        f"[{b['source']}] ({b['published']})\n标题: {b['title']}\n链接: {b['url']}\n简介: {b['summary']}"
+        for b in blog_candidates
+    )
+
+
+def format_raw_materials_markdown(
+    articles: list[dict], blog_candidates: list[dict], cfg: AppConfig
+) -> str:
+    d = cfg.digest
+    return f"""> 新闻 {len(articles)} 条 · 博客/经典 {len(blog_candidates)} 篇 · 新闻回溯 {d.news_hours} 小时
+
+## 新闻资讯
+
+{format_articles_text(articles)}
+
+## 博客/经典文章候选池
+
+{format_blogs_text(blog_candidates)}
+"""
+
+
+def save_raw_materials_enabled(cfg: AppConfig) -> bool:
+    return cfg.digest.save_raw_materials_doc
+
+
+@observe(name="summarize-digest", capture_input=False)
+def summarize(
+    articles: list[dict],
+    blog_candidates: list[dict],
+    cfg: AppConfig,
+    recent_reports: list[tuple[str, str]] | None = None,
+) -> str:
+    d = cfg.digest
+    model = d.model or DEFAULT_MODEL
+
+    topics_str = "、".join(cfg.topics)
+    lang = d.output_language
+
+    articles_text = format_articles_text(articles)
+    blogs_text = format_blogs_text(blog_candidates)
+
+    if recent_reports:
+        max_chars = d.report_history_max_chars
+        history_blocks = "\n\n---\n\n".join(
+            f"【{date}】（已覆盖标题摘要）\n{summarize_report_for_dedup(content, max_chars)}"
+            for date, content in recent_reports
+        )
+        history_section = f"""
+【近几日简报回顾】以下是最近 {len(recent_reports)} 期已覆盖内容的标题摘要，请避免重复收录（除非有重要新进展）：
+
+{history_blocks}
+
+"""
+    else:
+        history_section = ""
+
+    prompt = f"""你是 AI Dispatch 的主编，为顶级机构的同行撰写每日深度简报。
+读者是熟悉该领域的专业人士，不需要解释基础概念，需要的是洞察和判断。
+用户重点关注的方向：{topics_str}。
+所有输出请使用{lang}。
+
+### 核心规则
+【重要规则】任何引用今日或近几日回归的内容（新闻、博客、论文、数据、动态）的地方，一律附上原始链接。没有来源链接的判断或引用不应出现。飞书文档支持 markdown 语法，使用 `[标题](链接)` 的格式。
+
+### 历史报告
+{history_section}
+
+### 新闻资讯
+过去 {d.news_hours} 小时，共 {len(articles)} 条：
+
+{articles_text}
+
+### 博客/经典文章候选池
+# 共 {len(blog_candidates)} 篇（含近期博客、经典文章、访谈、大佬经验分享，均未推送过）：
+
+{blogs_text}
+
+### 输出要求
+按照五个章节，严格使用 Markdown 格式输出（不要加代码块围栏、不要输出 HTML 标签）：
+
+第一小节：重点新闻（10-15条，优先与用户关注方向相关）
+每条包含：发生了什么（1句）、技术/商业意义（2-3句，要有判断和立场）、与其他动态的关联（如有）。
+
+第二小节：趋势分析
+识别 2-3 个值得关注的技术或行业趋势，需有证据引用（每条引用必须附链接），给出预判。
+
+第三小节：值得深挖
+2-3 篇值得精读的论文或报告（优先 arxiv），说明核心贡献和阅读重点，每篇必须附链接。
+
+第四小节：今日推荐博客
+从候选池中挑选 1 篇最值得精读的（可以是近期博客、经典文章、访谈或经验分享，不限时间）。
+优先选择与今日新闻趋势有呼应的，或能提供长期视角的经典。
+给出：为什么今天推荐这篇（结合当下背景）、3 个核心观点（bullet）、适合谁读、大致阅读时间。
+
+第五小节：今日信号
+最关键的一个判断，不超过 60 字。
+
+以下为输出格式示例（仅作参考，你的正文不要包含代码块围栏）：
+
+```markdown
+> 新闻 {len(articles)} 条 · 博客 {len(blog_candidates)} 篇
+
+## ★ 重点新闻
+
+☆ [标题](URL)
+来源：XXX · 时间
+
+**事件：**……
+
+**意义：**……
+
+关联：……
+
+## ★ 趋势分析
+
+☆ 趋势名称
+……
+
+## ★ 值得深挖
+
+☆ [论文/报告标题](URL)
+……
+
+## ★ 今日推荐博客
+
+☆ [文章标题](URL)
+作者/来源 · 时间
+
+……为什么值得读……
+
+- 核心观点一
+- 核心观点二
+- 核心观点三
+
+适合：…… · 阅读时间：约 XX 分钟
+
+## ★ 今日信号
+
+……
+```"""
+
+    return complete(
+        prompt,
+        model=model,
+        max_tokens=d.max_tokens,
+        reasoning_effort=d.reasoning_effort,
+        is_complete=is_digest_complete,
+        trace_metadata={
+            "news_count": len(articles),
+            "blog_count": len(blog_candidates),
+            "recent_report_count": len(recent_reports or []),
+        },
+    )

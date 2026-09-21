@@ -388,47 +388,52 @@ def strip_internal_fields(articles: list[dict]) -> list[dict]:
 
 def process_articles(
     articles: list[dict],
-    cfg: dict,
+    cfg,
     *,
     pool: str,
 ) -> list[dict]:
     """Clean metadata, dedup, score, and cap for LLM input."""
-    d = cfg.get("digest", {})
-    topics = cfg.get("topics", [])
-    keywords = cfg.get("arxiv_keywords", [])
+    from ai_dispatch.config import AppConfig
+
+    if not isinstance(cfg, AppConfig):
+        cfg = AppConfig.from_dict(cfg)
+    d = cfg.digest
+    topics = cfg.topics
+    keywords = cfg.arxiv_keywords
 
     deduped = deduplicate_articles(articles)
 
     if pool == "news":
-        arxiv_max = int(d.get("arxiv_max_items", 30))
-        news_max = int(d.get("news_max_items", 40))
+        arxiv_max = d.arxiv_max_items
+        news_max = d.news_max_items
         arxiv_items = [a for a in deduped if a.get("kind") == "arxiv"]
         other_items = [a for a in deduped if a.get("kind") != "arxiv"]
         ranked = rank_articles(arxiv_items, topics, keywords, max_items=arxiv_max)
         ranked.extend(rank_articles(other_items, topics, keywords, max_items=news_max))
         return strip_internal_fields(ranked)
 
-    if pool == "blog":
-        max_items = int(d.get("blog_max_items", 25))
-    else:
-        max_items = int(d.get("news_max_items", 40))
+    max_items = d.blog_max_items if pool == "blog" else d.news_max_items
 
     ranked = rank_articles(deduped, topics, keywords, max_items=max_items)
     return strip_internal_fields(ranked)
 
 
-def build_classics(cfg: dict, history: set[str], max_items: int) -> list[dict]:
+def build_classics(cfg, history: set[str], max_items: int) -> list[dict]:
+    from ai_dispatch.config import AppConfig
+
+    if not isinstance(cfg, AppConfig):
+        cfg = AppConfig.from_dict(cfg)
     classics = [
         {
-            "source": f"{c.get('type', 'classic').title()} · {c.get('author', '')}",
-            "title": c["title"],
-            "url": c["url"],
-            "summary": c.get("note", ""),
-            "published": str(c.get("year", "经典")),
+            "source": f"{c.type.title()} · {c.author}",
+            "title": c.title,
+            "url": c.url,
+            "summary": c.note,
+            "published": str(c.year),
             "kind": "classic",
         }
-        for c in (cfg.get("classics") or [])
-        if normalize_url(c["url"]) not in {normalize_url(u) for u in history}
+        for c in cfg.classics
+        if normalize_url(c.url) not in {normalize_url(u) for u in history}
     ]
     if max_items > 0:
         classics = classics[:max_items]

@@ -66,8 +66,5 @@ jobs:
           LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
         run: uv run ai-dispatch
 
-      - name: Persist state
-        if: github.event_name == 'workflow_dispatch' || steps.dedup.outputs.should_send == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: uv run ai-dispatch-issues save
+      # State sync: IssueBackedStateStore.save_history() pushes to the state Issue.
+      # See docs/adr/0001-state-persistence-via-github-issues.md

@@ -1,8 +1,9 @@
-"""Unit tests for fetch_news digest helpers."""
+"""Unit tests for digest module."""
 
 import unittest
 
-from ai_dispatch.fetch_news import (
+from ai_dispatch.config import AppConfig, DigestConfig
+from ai_dispatch.digest import (
     format_raw_materials_markdown,
     is_digest_complete,
     save_raw_materials_enabled,
@@ -83,7 +84,13 @@ class ReportSummaryTests(unittest.TestCase):
                 "published": "2026-08-01",
             }
         ]
-        cfg = {"digest": {"news_hours": 24}}
+        cfg = AppConfig(
+            topics=["AI"],
+            news_feeds={},
+            blog_feeds={},
+            arxiv_keywords=[],
+            digest=DigestConfig(news_hours=24),
+        )
         md = format_raw_materials_markdown(articles, blogs, cfg)
         self.assertIn("## 新闻资讯", md)
         self.assertIn("## 博客/经典文章候选池", md)
@@ -91,9 +98,18 @@ class ReportSummaryTests(unittest.TestCase):
         self.assertIn("Blog Post", md)
 
     def test_save_raw_materials_enabled_defaults_true(self):
-        self.assertTrue(save_raw_materials_enabled({}))
-        self.assertTrue(save_raw_materials_enabled({"digest": {}}))
-        self.assertFalse(save_raw_materials_enabled({"digest": {"save_raw_materials_doc": False}}))
+        base = AppConfig(
+            topics=[], news_feeds={}, blog_feeds={}, arxiv_keywords=[], digest=DigestConfig()
+        )
+        self.assertTrue(save_raw_materials_enabled(base))
+        disabled = AppConfig(
+            topics=[],
+            news_feeds={},
+            blog_feeds={},
+            arxiv_keywords=[],
+            digest=DigestConfig(save_raw_materials_doc=False),
+        )
+        self.assertFalse(save_raw_materials_enabled(disabled))
 
 
 if __name__ == "__main__":
