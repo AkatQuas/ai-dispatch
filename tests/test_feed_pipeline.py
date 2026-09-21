@@ -4,12 +4,15 @@ import unittest
 from datetime import UTC, datetime
 
 from ai_dispatch.feed_pipeline import (
+    FetchIssue,
+    classify_fetch_error,
     clean_html_text,
     deduplicate_articles,
     extract_radarai_summary,
     normalize_url,
     process_articles,
     rank_articles,
+    report_fetch_issues,
     score_relevance,
     title_similarity,
     truncate_summary,
@@ -138,6 +141,37 @@ class UtilityTests(unittest.TestCase):
     def test_truncate_summary(self):
         self.assertTrue(truncate_summary("hello world", 8).endswith("…"))
         self.assertEqual(len(truncate_summary("hello world", 8)), 8)
+
+
+class FetchIssueTests(unittest.TestCase):
+    def test_classify_fetch_error(self):
+        self.assertEqual(classify_fetch_error("HTTP Error 404: Not Found"), "stale_url")
+        self.assertEqual(classify_fetch_error("HTTP Error 403: Forbidden"), "blocked")
+        self.assertEqual(classify_fetch_error("HTTP Error 429: Too Many Requests"), "rate_limited")
+        self.assertEqual(classify_fetch_error("HTTP Error 502: Bad Gateway"), "transient")
+        self.assertEqual(classify_fetch_error("timed out"), "other")
+
+    def test_report_fetch_issues_groups_by_category(self):
+        import sys
+        from io import StringIO
+
+        issues = [
+            FetchIssue("Source A", "blocked"),
+            FetchIssue("Source B", "blocked"),
+            FetchIssue("Source C", "stale_url"),
+        ]
+        buf = StringIO()
+        old_stderr = sys.stderr
+        try:
+            sys.stderr = buf
+            report_fetch_issues(issues, "blog")
+            output = buf.getvalue()
+        finally:
+            sys.stderr = old_stderr
+        self.assertIn("RSS fetch (blog): 2 blocked", output)
+        self.assertIn("Source A, Source B", output)
+        self.assertIn("RSS fetch (blog): 1 stale URL", output)
+        self.assertIn("Source C", output)
 
 
 if __name__ == "__main__":

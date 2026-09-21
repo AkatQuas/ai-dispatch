@@ -9,7 +9,9 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
@@ -30,6 +32,51 @@ RADARAI_ONELINER_RE = re.compile(
     re.DOTALL,
 )
 TITLE_DEDUP_THRESHOLD = 0.72
+
+FETCH_ISSUE_LABELS: dict[str, str] = {
+    "stale_url": "stale URL (HTTP 404 — update config.yml)",
+    "blocked": "blocked (HTTP 403 — common on CI runners)",
+    "rate_limited": "rate limited (HTTP 429)",
+    "transient": "transient server error (retry may help)",
+    "invalid_feed": "invalid feed (response is not RSS/XML)",
+    "other": "fetch error",
+}
+
+
+@dataclass(frozen=True)
+class FetchIssue:
+    source: str
+    category: str
+
+
+def classify_fetch_error(message: str) -> str:
+    lowered = message.lower()
+    if "404" in lowered:
+        return "stale_url"
+    if "403" in lowered:
+        return "blocked"
+    if "429" in lowered:
+        return "rate_limited"
+    if any(code in lowered for code in ("502", "503", "504")):
+        return "transient"
+    return "other"
+
+
+def report_fetch_issues(issues: list[FetchIssue], feed_kind: str) -> None:
+    """Print one summary line per issue category instead of per-source noise."""
+    if not issues:
+        return
+    grouped: dict[str, list[str]] = defaultdict(list)
+    for issue in issues:
+        grouped[issue.category].append(issue.source)
+    for category in sorted(grouped):
+        sources = sorted(grouped[category])
+        label = FETCH_ISSUE_LABELS.get(category, category)
+        names = ", ".join(sources)
+        print(
+            f"[WARN] RSS fetch ({feed_kind}): {len(sources)} {label}: {names}",
+            file=sys.stderr,
+        )
 
 
 class RateLimiter:
@@ -184,13 +231,11 @@ def parse_feed_entries(
     hn_min_points: int,
     summary_max_chars: int,
     feed_kind: str,
-) -> list[dict]:
+) -> tuple[list[dict], FetchIssue | None]:
     feed = feedparser.parse(raw)
-    if feed.bozo and feed.bozo_exception:
-        print(
-            f"[WARN] {source}: feed parse issue: {feed.bozo_exception}",
-            file=sys.stderr,
-        )
+    parse_issue: FetchIssue | None = None
+    if feed.bozo and feed.bozo_exception and not feed.entries:
+        parse_issue = FetchIssue(source, "invalid_feed")
 
     windowed: list[tuple[Any, datetime | None]] = []
     for entry in feed.entries:
@@ -229,7 +274,7 @@ def parse_feed_entries(
                 "_score": 0,
             }
         )
-    return articles
+    return articles, parse_issue
 
 
 def _fetch_one_source(
@@ -246,7 +291,7 @@ def _fetch_one_source(
     timeout: float,
     user_agent: str,
     rate_limiter: RateLimiter,
-) -> tuple[str, list[dict], str | None]:
+) -> tuple[str, list[dict], FetchIssue | None]:
     try:
         raw = fetch_feed_bytes(
             url,
@@ -254,7 +299,7 @@ def _fetch_one_source(
             user_agent=user_agent,
             rate_limiter=rate_limiter,
         )
-        items = parse_feed_entries(
+        items, parse_issue = parse_feed_entries(
             source,
             url,
             raw,
@@ -266,9 +311,9 @@ def _fetch_one_source(
             summary_max_chars=summary_max_chars,
             feed_kind=feed_kind,
         )
-        return source, items, None
+        return source, items, parse_issue
     except (urllib.error.URLError, TimeoutError, ValueError) as e:
-        return source, [], str(e)
+        return source, [], FetchIssue(source, classify_fetch_error(str(e)))
 
 
 def fetch_feeds(
@@ -291,6 +336,7 @@ def fetch_feeds(
 
     rate_limiter = RateLimiter(min_interval)
     articles: list[dict] = []
+    issues: list[FetchIssue] = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {
@@ -314,13 +360,14 @@ def fetch_feeds(
         for future in as_completed(futures):
             source = futures[future]
             try:
-                _, items, error = future.result()
-                if error:
-                    print(f"[WARN] {source}: {error}", file=sys.stderr)
+                _, items, issue = future.result()
+                if issue:
+                    issues.append(issue)
                 articles.extend(items)
             except Exception as e:
-                print(f"[WARN] {source}: {e}", file=sys.stderr)
+                issues.append(FetchIssue(source, classify_fetch_error(str(e))))
 
+    report_fetch_issues(issues, feed_kind)
     return articles
 
 

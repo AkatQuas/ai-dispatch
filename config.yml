@@ -17,32 +17,32 @@ topics:
 #  可以自行添加任何支持 RSS 的网站
 # ──────────────────────────────────────────────
 news_feeds:
-  Anthropic Official: https://www.anthropic.com/news/feed.xml
+  # Anthropic Official: https://www.anthropic.com/news/feed.xml  # 无官方 RSS
   arxiv cs.AI: https://rss.arxiv.org/rss/cs.AI
   arxiv cs.RO: https://rss.arxiv.org/rss/cs.RO
   arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
   Baoyu: https://s.baoyu.io/feed.xml
   Ben's Bites: https://www.bensbites.com/feed
   Andrej Karpathy RSS: https://karpathy.github.io/feed.xml
-  Google DeepMind: https://deepmind.google/discover/blog/rss.xml
-  Google AI Research: https://ai.googleblog.com/feeds/posts/default
+  Google DeepMind: https://deepmind.google/blog/rss.xml
+  Google AI Research: https://blog.google/technology/ai/rss/
   Hugging Face: https://huggingface.co/blog/feed.xml
   KDnuggets: https://www.kdnuggets.com/feed
   Last Week in AI: https://lastweekin.ai/feed
-  MarkTechPost: https://www.marktechpost.com/feed/
-  Meta FAIR Blog: https://ai.meta.com/blog/rss/
+  # MarkTechPost: https://www.marktechpost.com/feed/  # 返回 HTML 非 RSS
+  # Meta FAIR Blog: https://ai.meta.com/blog/rss/  # 无公开 RSS
   MIT Tech Review AI: https://www.technologyreview.com/topic/artificial-intelligence/feed
-  NVIDIA AI Blog: https://blogs.nvidia.com/blog/category/ai/feed/
+  NVIDIA AI Blog: https://blogs.nvidia.com/feed/
   One Useful Thing (Ethan Mollick): https://www.oneusefulthing.org/feed
   OpenAI Blog: https://openai.com/blog/rss.xml
   Sebastian Raschka: https://sebastianraschka.com/rss_feed.xml
   Sebastian Raschka (Ahead of AI): https://magazine.sebastianraschka.com/feed.xml
   Simon Willison: https://simonwillison.net/atom/everything/
   TechCrunch AI: https://techcrunch.com/category/artificial-intelligence/feed/
-  The Verge AI: https://www.theverge.com/ai-artificial-intelligence/rss/index.xml
+  The Verge AI: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
   Towards Data Science: https://towardsdatascience.com/feed
-  W&B Fully Connected: https://wandb.ai/fully-connected/feed
-  VentureBeat AI: https://venturebeat.com/category/ai/feed/
+  # W&B Fully Connected: https://wandb.ai/fully-connected/feed  # SPA 页面，非 RSS
+  VentureBeat AI: https://feeds.feedburner.com/venturebeat/SZYF
 
 # ──────────────────────────────────────────────
 #  STEP 3 · 选择博客订阅
@@ -59,7 +59,7 @@ blog_feeds:
   Lilian Weng: https://lilianweng.github.io/index.xml
   Radarai: https://radarai.top/feed.xml
   The Gradient: https://thegradient.pub/rss/
-  The Batch (Andrew Ng): https://www.deeplearning.ai/the-batch/feed
+  # The Batch (Andrew Ng): https://www.deeplearning.ai/the-batch/feed  # 无公开 RSS
 
 # ──────────────────────────────────────────────
 #  STEP 4 · 添加经典文章 / 访谈 / 大佬经验分享
