@@ -19,8 +19,20 @@ topics:
 news_feeds:
   # Anthropic Official: https://www.anthropic.com/news/feed.xml  # 无官方 RSS
   arxiv cs.AI: https://rss.arxiv.org/rss/cs.AI
+  arxiv cs.CL: https://rss.arxiv.org/rss/cs.CL
+  arxiv cs.CR: https://rss.arxiv.org/rss/cs.CR
   arxiv cs.RO: https://rss.arxiv.org/rss/cs.RO
   arxiv cs.LG(Machine Learning): https://rss.arxiv.org/rss/cs.LG
+  AWS Machine Learning Blog: https://aws.amazon.com/blogs/machine-learning/feed/
+  Cloudflare AI: https://blog.cloudflare.com/tag/ai/rss/
+  Cohere Blog: https://cohere.com/blog/rss.xml
+  Microsoft Research Blog: https://www.microsoft.com/en-us/research/blog/feed/
+  MIT News AI: https://news.mit.edu/rss/topic/artificial-intelligence2
+  OpenAI News: https://openai.com/news/rss.xml
+  Stanford HAI: https://hai.stanford.edu/news/rss.xml
+  Wired AI: https://www.wired.com/feed/tag/ai/latest/rss
+  Ars Technica Lab: https://feeds.arstechnica.com/arstechnica/technology-lab
+  404 Media: https://www.404media.co/rss
   Baoyu: https://s.baoyu.io/feed.xml
   Ben's Bites: https://www.bensbites.com/feed
   Andrej Karpathy RSS: https://karpathy.github.io/feed.xml
@@ -49,6 +61,11 @@ news_feeds:
 #  回溯 blog_days 天内的新文章，已推送过的自动跳过
 # ──────────────────────────────────────────────
 blog_feeds:
+  Alignment Forum: https://www.alignmentforum.org/feed.xml
+  LessWrong: https://www.lesswrong.com/feed.xml
+  Semianalysis: https://semianalysis.com/feed
+  Eugene Yan: https://eugeneyan.com/rss/
+  swyx: https://www.swyx.io/rss.xml
   AI Snake Oil: https://aisnakeoil.substack.com/feed
   Field Guide to AI: https://fieldguidetoai.substack.com/feed
   Gary Marcus AI Review: https://garymarcus.substack.com/feed
@@ -136,6 +153,22 @@ arxiv_keywords:
   - vision
   - foundation model
   - reasoning
+  - governance
+  - regulation
+  - privacy
+  - security
+  - alignment
+  - jailbreak
+  - red team
+  - watermark
+
+# 机械预筛（抓取后、简报 LLM 之前）：标题规则、媒体源 AI 相关性、关键词门槛、往期标题去重
+mechanical_filter:
+  min_title_chars: 12
+  min_keyword_score: 1 # 0=关闭；与 topics/arxiv_keywords 相关度
+  t2_require_ai_signal: true # 非官方源须命中 topics/关键词或内置 AI 信号词
+  dedupe_recent_reports: true
+  report_title_dedup_threshold: 0.75
 
 digest:
   save_raw_materials_doc: true # 送 LLM 总结前，将新闻+博客/经典原文单独存为飞书文档（默认开启）

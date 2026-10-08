@@ -433,13 +433,53 @@ def strip_internal_fields(articles: list[dict]) -> list[dict]:
     return cleaned
 
 
+def _prepare_article_pool(
+    articles: list[dict],
+    cfg,
+    *,
+    recent_titles: list[str] | None,
+) -> list[dict]:
+    from ai_dispatch.config import AppConfig
+    from ai_dispatch.mechanical_filter import apply_mechanical_filters, dedupe_against_titles
+
+    if not isinstance(cfg, AppConfig):
+        cfg = AppConfig.from_dict(cfg)
+    deduped = deduplicate_articles(articles)
+    prepared = apply_mechanical_filters(deduped, cfg)
+    mf = cfg.mechanical_filter
+    if mf.dedupe_recent_reports and recent_titles:
+        prepared = dedupe_against_titles(
+            prepared,
+            recent_titles,
+            threshold=mf.report_title_dedup_threshold,
+        )
+    return prepared
+
+
+def _filter_min_keyword(articles: list[dict], cfg, topics: list[str], keywords: list[str]) -> list[dict]:
+    from ai_dispatch.config import AppConfig
+
+    if not isinstance(cfg, AppConfig):
+        cfg = AppConfig.from_dict(cfg)
+    min_kw = cfg.mechanical_filter.min_keyword_score
+    if min_kw <= 0:
+        return articles
+    kept: list[dict] = []
+    for item in articles:
+        text = f"{item.get('title', '')} {item.get('summary', '')}"
+        if score_relevance(text, topics, keywords) >= min_kw:
+            kept.append(item)
+    return kept
+
+
 def process_articles(
     articles: list[dict],
     cfg,
     *,
     pool: str,
+    recent_titles: list[str] | None = None,
 ) -> list[dict]:
-    """Clean metadata, dedup, score, and cap for LLM input."""
+    """Clean metadata, dedup, filter, rank, and cap for digest input."""
     from ai_dispatch.config import AppConfig
 
     if not isinstance(cfg, AppConfig):
@@ -448,20 +488,25 @@ def process_articles(
     topics = cfg.topics
     keywords = cfg.arxiv_keywords
 
-    deduped = deduplicate_articles(articles)
+    prepared = _filter_min_keyword(
+        _prepare_article_pool(articles, cfg, recent_titles=recent_titles),
+        cfg,
+        topics,
+        keywords,
+    )
 
     if pool == "news":
         arxiv_max = d.arxiv_max_items
         news_max = d.news_max_items
-        arxiv_items = [a for a in deduped if a.get("kind") == "arxiv"]
-        other_items = [a for a in deduped if a.get("kind") != "arxiv"]
+        arxiv_items = [a for a in prepared if a.get("kind") == "arxiv"]
+        other_items = [a for a in prepared if a.get("kind") != "arxiv"]
         ranked = rank_articles(arxiv_items, topics, keywords, max_items=arxiv_max)
         ranked.extend(rank_articles(other_items, topics, keywords, max_items=news_max))
         return strip_internal_fields(ranked)
 
     max_items = d.blog_max_items if pool == "blog" else d.news_max_items
 
-    ranked = rank_articles(deduped, topics, keywords, max_items=max_items)
+    ranked = rank_articles(prepared, topics, keywords, max_items=max_items)
     return strip_internal_fields(ranked)
 
 

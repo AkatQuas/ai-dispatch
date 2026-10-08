@@ -30,6 +30,19 @@ class ConfigTests(unittest.TestCase):
         opts = DigestConfig(user_agent="CustomBot/1.0").fetch_options()
         self.assertEqual(opts["user_agent"], "CustomBot/1.0")
 
+    def test_mechanical_filter_from_dict(self):
+        cfg = AppConfig.from_dict(
+            {
+                "topics": [],
+                "news_feeds": {},
+                "blog_feeds": {},
+                "arxiv_keywords": [],
+                "mechanical_filter": {"min_keyword_score": 2, "dedupe_recent_reports": False},
+            }
+        )
+        self.assertEqual(cfg.mechanical_filter.min_keyword_score, 2)
+        self.assertFalse(cfg.mechanical_filter.dedupe_recent_reports)
+
 
 if __name__ == "__main__":
     unittest.main()

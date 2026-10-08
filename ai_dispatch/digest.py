@@ -5,7 +5,6 @@ import re
 from ai_dispatch.config import AppConfig
 from ai_dispatch.langfuse_tracing import observe
 from ai_dispatch.llm import DEFAULT_MODEL, complete
-
 DIGEST_SECTION_MARKERS = (
     "## ★ 重点新闻",
     "## ★ 趋势分析",
@@ -13,6 +12,15 @@ DIGEST_SECTION_MARKERS = (
     "## ★ 今日推荐博客",
     "## ★ 今日信号",
 )
+
+
+def titles_from_recent_reports(reports: list[tuple[str, str]]) -> list[str]:
+    """Headlines already covered in past digests (for feed-level dedup)."""
+    titles: list[str] = []
+    for _, content in reports:
+        for match in re.finditer(r"^☆\s+\[([^\]]+)\]\([^)]+\)", content, re.MULTILINE):
+            titles.append(match.group(1).strip())
+    return titles
 
 
 def extract_recommended_url(md: str) -> str | None:
@@ -142,7 +150,7 @@ def summarize(
 {history_section}
 
 ### 新闻资讯
-过去 {d.news_hours} 小时，共 {len(articles)} 条：
+过去 {d.news_hours} 小时，共 {len(articles)} 条（已机械过滤并按相关度排序）：
 
 {articles_text}
 

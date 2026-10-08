@@ -26,30 +26,41 @@ Every digest contains five structured sections:
 
 ## How the Feed Pipeline Works
 
-Before the LLM sees anything, raw RSS goes through a **fetch → clean → process** pipeline (`ai_dispatch/feed_pipeline.py`):
+Before the digest LLM runs, RSS goes through **fetch → clean → filter → rank → cap** (`feed_pipeline.py` + `mechanical_filter.py`). There is **one** DeepSeek call for the briefing itself — no per-article LLM scoring.
 
-| Stage | What it does |
-| ----- | ------------ |
-| **Fetch** | Parallel HTTP downloads with per-request timeout and global QPS cap (`fetch_max_workers`, `fetch_min_interval_seconds`) |
-| **Clean** | Strip HTML/entities, normalize Hacker News boilerplate, extract Radarai one-liners, fall back to `entry.content` when summary is empty |
-| **Process** | URL normalization, title dedup, topic-keyword scoring, per-pool caps (`news_max_items`, `arxiv_max_items`, `blog_max_items`) |
+| Stage | Module | What it does |
+| ----- | ------ | ------------ |
+| **Fetch** | `feed_pipeline` | Parallel HTTP downloads, timeout, global QPS cap (`fetch_max_workers`, `fetch_min_interval_seconds`) |
+| **Clean** | `feed_pipeline` | Strip HTML/entities, HN boilerplate, Radarai one-liners; use `entry.content` when summary is empty |
+| **Filter** | `mechanical_filter` | URL + title dedup; drop spam titles; require AI signal on generic media feeds; optional dedup vs **recent digest headlines** (from GitHub Issues) |
+| **Rank & cap** | `feed_pipeline` | Score by `topics` + `arxiv_keywords`, keep top N per pool (`news_max_items`, `arxiv_max_items`, `blog_max_items`) |
 
-Only the processed snapshot is sent to the LLM (and optionally saved as a Lark **Raw Materials** doc). Logs show compression, e.g. `News pipeline: 180 fetched → 40 for LLM`.
+The ranked snapshot is what goes into the digest prompt (and optionally a Lark **Raw Materials** doc). Logs show compression, e.g. `News pipeline: 180 fetched → 40 for LLM`.
 
-Key `digest` knobs in `config.yml`:
+**`mechanical_filter` in `config.yml`:**
+
+| Setting | Default | Purpose |
+| ------- | ------- | ------- |
+| `min_title_chars` | 12 | Drop very short titles |
+| `min_keyword_score` | 1 | Minimum topic/keyword relevance (0 = off) |
+| `t2_require_ai_signal` | true | Non-official feeds must match topics/keywords or built-in AI terms |
+| `dedupe_recent_reports` | true | Skip items similar to headlines in recent digests |
+| `report_title_dedup_threshold` | 0.75 | Title similarity cutoff for report dedup |
+
+**`digest` pool sizes:**
 
 | Setting | Default | Purpose |
 | ------- | ------- | ------- |
 | `news_max_items` | 40 | Max news items after ranking |
-| `arxiv_max_items` | 30 | Max arXiv papers kept in the news pool |
-| `blog_max_items` | 25 | Max blog RSS items for LLM |
-| `blog_classics_max` | 3 | Max classic/interview picks in the blog pool |
-| `fetch_max_workers` | 3 | Parallel RSS fetch workers |
-| `fetch_min_interval_seconds` | 0.5 | Minimum gap between any two HTTP requests |
-| `hn_min_points` | 5 | Drop low-score Hacker News RSS items |
-| `summary_max_chars` | 400 | Max cleaned summary length per item |
+| `arxiv_max_items` | 30 | Max arXiv papers in the news pool |
+| `blog_max_items` | 25 | Max blog RSS items for the digest |
+| `blog_classics_max` | 3 | Max classic/interview picks |
+| `fetch_max_workers` | 3 | Parallel RSS workers |
+| `fetch_min_interval_seconds` | 0.5 | Min gap between HTTP requests |
+| `hn_min_points` | 5 | HN RSS minimum points |
+| `summary_max_chars` | 400 | Max cleaned summary per item |
 
-`news_feeds` includes enabled **arXiv** sources (`cs.AI`, `cs.RO`, `cs.LG`) filtered by `arxiv_keywords` for the **Papers Worth Reading** section.
+`news_feeds` includes **arXiv** (`cs.AI`, `cs.CL`, `cs.CR`, `cs.RO`, `cs.LG`) filtered by `arxiv_keywords` for **Papers Worth Reading**. The digest LLM also receives a short **history** of past reports (titles + signal) to avoid repeating stories in prose.
 
 ---
 
@@ -330,8 +341,10 @@ ai-dispatch/
 ├── setup.py                ← Interactive setup wizard
 ├── check_setup.py          ← Setup verification (helper)
 ├── ai_dispatch/            ← Application library (single package layer)
-│   ├── fetch_news.py       ← Orchestration: fetch → summarize → Lark
-│   ├── feed_pipeline.py    ← RSS fetch · clean · dedup · rank · cap
+│   ├── fetch_news.py       ← Orchestration: fetch → filter → summarize → Lark
+│   ├── feed_pipeline.py    ← RSS fetch · clean · rank · cap
+│   ├── mechanical_filter.py← Title rules · AI signal gate · report dedup
+│   ├── digest.py           ← Prompt, formatting, past-report context
 │   ├── issue_store.py      ← Persist state/reports via GitHub Issues
 │   ├── llm.py              ← DeepSeek API client
 │   ├── langfuse_tracing.py ← Optional Langfuse tracing

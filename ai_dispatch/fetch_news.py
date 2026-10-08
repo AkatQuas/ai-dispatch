@@ -6,13 +6,9 @@ from ai_dispatch.digest import (
     format_raw_materials_markdown,
     save_raw_materials_enabled,
     summarize,
+    titles_from_recent_reports,
 )
-from ai_dispatch.feed_pipeline import (
-    build_classics,
-    fetch_feeds,
-    normalize_url,
-    process_articles,
-)
+from ai_dispatch.feed_pipeline import build_classics, fetch_feeds, normalize_url, process_articles
 from ai_dispatch.issue_store import publish_today_report
 from ai_dispatch.lark_client import lark_configured
 from ai_dispatch.lark_doc import create_doc_with_markdown
@@ -21,7 +17,9 @@ from ai_dispatch.llm import DEFAULT_MODEL
 from ai_dispatch.state_store import REPORT_HISTORY_COUNT, StateStore, default_state_store
 
 
-def fetch_recent_articles(cfg: AppConfig) -> list[dict]:
+def fetch_recent_articles(
+    cfg: AppConfig, *, recent_titles: list[str] | None = None
+) -> list[dict]:
     """Fetch news RSS (parallel, rate-limited) → clean → dedup → rank → cap."""
     d = cfg.digest
     raw = fetch_feeds(
@@ -32,13 +30,18 @@ def fetch_recent_articles(cfg: AppConfig) -> list[dict]:
         d.fetch_options(),
         feed_kind="news",
     )
-    processed = process_articles(raw, cfg, pool="news")
+    processed = process_articles(raw, cfg, pool="news", recent_titles=recent_titles)
     if len(raw) != len(processed):
         print(f"  News pipeline: {len(raw)} fetched → {len(processed)} for LLM")
     return processed
 
 
-def fetch_blog_candidates(cfg: AppConfig, history: set[str]) -> list[dict]:
+def fetch_blog_candidates(
+    cfg: AppConfig,
+    history: set[str],
+    *,
+    recent_titles: list[str] | None = None,
+) -> list[dict]:
     """抓取近 blog_days 天的博客 + 经典列表，过滤已推送过的。"""
     d = cfg.digest
     blog_hours = d.blog_days * 24
@@ -52,7 +55,7 @@ def fetch_blog_candidates(cfg: AppConfig, history: set[str]) -> list[dict]:
         d.fetch_options(),
         feed_kind="blog",
     )
-    blogs = process_articles(raw, cfg, pool="blog")
+    blogs = process_articles(raw, cfg, pool="blog", recent_titles=recent_titles)
     if len(raw) != len(blogs):
         print(f"  Blog pipeline: {len(raw)} fetched → {len(blogs)} for LLM")
     blogs = [b for b in blogs if normalize_url(b["url"]) not in history_norm]
@@ -89,19 +92,21 @@ def run_digest(store: StateStore | None = None) -> bool:
     history = state.load_history()
     sent_urls = set(history.get("urls", []))
 
+    recent_reports = state.load_recent_reports(REPORT_HISTORY_COUNT)
+    recent_titles = titles_from_recent_reports(recent_reports) if recent_reports else []
+
     print("Fetching news articles...")
-    articles = fetch_recent_articles(cfg)
+    articles = fetch_recent_articles(cfg, recent_titles=recent_titles)
     print(f"Found {len(articles)} news articles")
 
     print("Fetching blog/classic candidates...")
-    blog_candidates = fetch_blog_candidates(cfg, sent_urls)
+    blog_candidates = fetch_blog_candidates(cfg, sent_urls, recent_titles=recent_titles)
     print(f"Found {len(blog_candidates)} unsent blog/classic candidates")
 
     if not articles and not blog_candidates:
         print("No content found, skipping.")
         return False
 
-    recent_reports = state.load_recent_reports(REPORT_HISTORY_COUNT)
     if recent_reports:
         dates = ", ".join(date for date, _ in recent_reports)
         print(f"Loaded {len(recent_reports)} recent report(s) for dedup: {dates}")

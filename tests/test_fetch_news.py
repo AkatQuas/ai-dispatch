@@ -8,6 +8,7 @@ from ai_dispatch.digest import (
     is_digest_complete,
     save_raw_materials_enabled,
     summarize_report_for_dedup,
+    titles_from_recent_reports,
 )
 
 SAMPLE_REPORT = """# AI News 2026年08月07日
@@ -96,6 +97,11 @@ class ReportSummaryTests(unittest.TestCase):
         self.assertIn("## 博客/经典文章候选池", md)
         self.assertIn("Headline", md)
         self.assertIn("Blog Post", md)
+
+    def test_titles_from_recent_reports(self):
+        titles = titles_from_recent_reports([("2026-01-01", SAMPLE_REPORT)])
+        self.assertIn("Kimi K3 Escape", titles)
+        self.assertIn("Blog Post", titles)
 
     def test_save_raw_materials_enabled_defaults_true(self):
         base = AppConfig(

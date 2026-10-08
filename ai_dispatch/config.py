@@ -13,6 +13,18 @@ from ai_dispatch.paths import CONFIG_PATH
 
 
 @dataclass
+class MechanicalFilterConfig:
+    """Deterministic filters before keyword rank and digest."""
+
+    min_title_chars: int = 12
+    min_keyword_score: int = 1
+    t2_require_ai_signal: bool = True
+    block_title_regex: list[str] = field(default_factory=list)
+    report_title_dedup_threshold: float = 0.75
+    dedupe_recent_reports: bool = True
+
+
+@dataclass
 class ClassicEntry:
     title: str
     url: str
@@ -69,10 +81,18 @@ class AppConfig:
     arxiv_keywords: list[str]
     digest: DigestConfig
     classics: list[ClassicEntry] = field(default_factory=list)
+    mechanical_filter: MechanicalFilterConfig = field(default_factory=MechanicalFilterConfig)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AppConfig:
         digest_raw = data.get("digest") or {}
+        mechanical_raw = dict(data.get("mechanical_filter") or {})
+        # Legacy config: min_keyword_score / dedupe lived under removed `selection` key.
+        legacy_selection = data.get("selection") or {}
+        if "min_keyword_score" in legacy_selection and "min_keyword_score" not in mechanical_raw:
+            mechanical_raw["min_keyword_score"] = legacy_selection["min_keyword_score"]
+        if "dedupe_recent_reports" in legacy_selection and "dedupe_recent_reports" not in mechanical_raw:
+            mechanical_raw["dedupe_recent_reports"] = legacy_selection["dedupe_recent_reports"]
         classics = [
             ClassicEntry(
                 title=c["title"],
@@ -93,6 +113,13 @@ class AppConfig:
                 **{k: v for k, v in digest_raw.items() if k in DigestConfig.__dataclass_fields__}
             ),
             classics=classics,
+            mechanical_filter=MechanicalFilterConfig(
+                **{
+                    k: v
+                    for k, v in mechanical_raw.items()
+                    if k in MechanicalFilterConfig.__dataclass_fields__
+                }
+            ),
         )
 
 
