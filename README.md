@@ -87,7 +87,7 @@ Go to **Actions → ⚙️ Setup → Run workflow** and fill in the form:
 
 | Field           | What to enter                          |
 | --------------- | -------------------------------------- |
-| DeepSeek model  | `deepseek-v4-flash` (default), `deepseek-v4-pro`, etc. |
+| DeepSeek model  | `deepseek-flash` (default), `deepseek-v4-pro`, etc. |
 | Output language | `English` or `中文`                    |
 
 The workflow updates `config.yml` and prints a checklist of the secrets you need to add next.
@@ -137,7 +137,7 @@ Go to **Actions → ✅ Check Setup → Run workflow**
   ✅  blog_feeds configured  (8 blogs)
 
 ── DeepSeek API ─────────────────────────────────────
-  ✅  API connection successful (deepseek-v4-flash)
+  ✅  API connection successful (deepseek-flash)
 
 ── Lark ─────────────────────────────────────────────
   ✅  Lark configured
@@ -255,7 +255,7 @@ GitHub Actions is always free. The only cost is the DeepSeek API call for each d
 
 | Model                                   | Notes                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------- |
-| `deepseek-v4-flash` / `deepseek-v4-pro` | Newer V4 models — see [DeepSeek docs](https://api-docs.deepseek.com/) |
+| `deepseek-flash` / `deepseek-v4-pro` | Newer V4 models — see [DeepSeek docs](https://api-docs.deepseek.com/) |
 
 Change the model in `config.yml` under `digest.model`, or pass it in the **⚙️ Setup** workflow.
 

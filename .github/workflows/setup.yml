@@ -12,9 +12,9 @@ on:
           - English
           - 中文
       model:
-        description: 'DeepSeek model (e.g. deepseek-v4-flash, deepseek-v4-pro)'
+        description: 'DeepSeek model (e.g. deepseek-flash, deepseek-v4-pro)'
         required: true
-        default: deepseek-v4-flash
+        default: deepseek-flash
         type: string
 
 jobs:

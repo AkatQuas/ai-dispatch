@@ -85,7 +85,7 @@
 
 | 字段            | 填写内容                                          |
 | --------------- | ------------------------------------------------- |
-| DeepSeek 模型   | `deepseek-v4-flash`（默认）、`deepseek-v4-pro` 等 |
+| DeepSeek 模型   | `deepseek-flash`（默认）、`deepseek-v4-pro` 等 |
 | 输出语言        | `English` 或 `中文`                               |
 
 workflow 运行完成后会自动更新 `config.yml`，并在日志中打印需要添加的 Secrets 清单。
@@ -135,7 +135,7 @@ workflow 运行完成后会自动更新 `config.yml`，并在日志中打印需�
   ✅  blog_feeds 已配置  (8 个博客)
 
 ── DeepSeek API ─────────────────────────────────────
-  ✅  API 连接成功 (deepseek-v4-flash)
+  ✅  API 连接成功 (deepseek-flash)
 
 ── Lark ─────────────────────────────────────────────
   ✅  Lark 配置完整
@@ -251,7 +251,7 @@ GitHub Actions 完全免费。唯一成本是每次日报的 DeepSeek API 调用
 
 | 模型                                    | 说明                                                           |
 | --------------------------------------- | -------------------------------------------------------------- |
-| `deepseek-v4-flash` / `deepseek-v4-pro` | V4 新模型 — 见 [DeepSeek 文档](https://api-docs.deepseek.com/) |
+| `deepseek-flash` / `deepseek-v4-pro` | V4 新模型 — 见 [DeepSeek 文档](https://api-docs.deepseek.com/) |
 
 在 `config.yml` 的 `digest.model` 中修改模型，或在 **⚙️ Setup** workflow 中指定。
 
@@ -310,7 +310,7 @@ VS Code/Cursor：安装 [Ruff 扩展](https://marketplace.visualstudio.com/items
 - **`complete()` / `ping()` 的 trace** — 输入 prompt、输出正文
 - **多轮 generation 嵌套** — thinking 模型需要续写时，每轮单独可见
 - **分层 trace 结构** — `summarize-digest` → `deepseek-complete` → `deepseek-round-N-{initial|reasoning|truncation}` → `deepseek-generation-N-*`
-- **模型名、token、费用** — 便于对比 `deepseek-v4-flash` / `pro` 或排查异常消耗
+- **模型名、token、费用** — 便于对比 `deepseek-flash` / `pro` 或排查异常消耗
 - **标签** `ai-dispatch` — 在 Langfuse 控制台按项目筛选
 
 任一 key 未设置则 **完全跳过上报**，不影响正常运行。

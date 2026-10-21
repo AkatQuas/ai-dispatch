@@ -169,7 +169,7 @@ def main():
     section("DeepSeek API")
     print(dim("  申请 API Key：https://platform.deepseek.com/api_keys"))
     api_key = ask("粘贴你的 DEEPSEEK_API_KEY", secret=True)
-    default_model = ask("模型名称", default="deepseek-v4-flash")
+    default_model = ask("模型名称", default="deepseek-flash")
 
     # ── Lark ─────────────────────────────────────────────────────────────
     section("Lark 配置")
